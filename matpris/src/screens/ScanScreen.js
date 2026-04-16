@@ -1,23 +1,40 @@
 // src/screens/ScanScreen.js
 
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   ScrollView,
+  Image,
   StyleSheet,
 } from "react-native";
+import * as ImagePicker from "expo-image-picker";
 import { STORES, COLORS, MOCK_RECEIPT_ITEMS } from "../utils/constants";
 
 export default function ScanScreen({ onGoBack, totalScans, onScanComplete }) {
   const [step, setStep] = useState(0); // 0=camera, 1=store, 2=review, 3=done
   const [selectedStore, setSelectedStore] = useState(null);
   const [items, setItems] = useState([]);
+  const [photo, setPhoto] = useState(null);
 
-  const handleTakePhoto = () => {
-    setItems(MOCK_RECEIPT_ITEMS);
-    setStep(1);
+  const handleTakePhoto = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") {
+      alert("Appen trenger tilgang til kameraet.");
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      setPhoto(result.assets[0].uri);
+      setItems(MOCK_RECEIPT_ITEMS);
+      setStep(1);
+    }
   };
 
   const handleSelectStore = (storeKey) => {
@@ -34,6 +51,7 @@ export default function ScanScreen({ onGoBack, totalScans, onScanComplete }) {
     setStep(0);
     setSelectedStore(null);
     setItems([]);
+    setPhoto(null);
     onGoBack();
   };
 
@@ -47,7 +65,7 @@ export default function ScanScreen({ onGoBack, totalScans, onScanComplete }) {
 
         <View style={styles.cameraBox}>
           <Text style={styles.cameraIcon}>📷</Text>
-          <Text style={styles.cameraText}>Kameravisning her</Text>
+          <Text style={styles.cameraText}>Trykk for å ta bilde</Text>
           <Text style={styles.cameraHint}>
             Hold kvitteringen innenfor rammen
           </Text>
@@ -67,10 +85,14 @@ export default function ScanScreen({ onGoBack, totalScans, onScanComplete }) {
   // Step 1: Select store
   if (step === 1) {
     return (
-      <View style={styles.container}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
         <TouchableOpacity style={styles.backBtn} onPress={() => setStep(0)}>
           <Text style={styles.backText}>← Tilbake</Text>
         </TouchableOpacity>
+
+        {photo && (
+          <Image source={{ uri: photo }} style={styles.photoPreview} />
+        )}
 
         <Text style={styles.stepTitle}>Hvilken butikk?</Text>
         <Text style={styles.stepDesc}>
@@ -99,7 +121,7 @@ export default function ScanScreen({ onGoBack, totalScans, onScanComplete }) {
             </TouchableOpacity>
           ))}
         </View>
-      </View>
+      </ScrollView>
     );
   }
 
@@ -112,6 +134,10 @@ export default function ScanScreen({ onGoBack, totalScans, onScanComplete }) {
           <Text style={styles.backText}>← Tilbake</Text>
         </TouchableOpacity>
 
+        {photo && (
+          <Image source={{ uri: photo }} style={styles.photoPreview} />
+        )}
+
         <View style={styles.reviewHeader}>
           <View
             style={[styles.storeDotLg, { backgroundColor: storeInfo?.color }]}
@@ -120,8 +146,7 @@ export default function ScanScreen({ onGoBack, totalScans, onScanComplete }) {
         </View>
 
         <Text style={styles.stepDesc}>
-          OCR fant {items.length} varer fra {storeInfo?.name}. Sjekk at alt
-          stemmer.
+          {items.length} varer fra {storeInfo?.name}
         </Text>
 
         {items.map((item, i) => (
@@ -223,6 +248,13 @@ const styles = StyleSheet.create({
     color: COLORS.textMuted,
     textAlign: "center",
     marginTop: 12,
+  },
+  photoPreview: {
+    width: "100%",
+    height: 200,
+    borderRadius: 14,
+    marginBottom: 20,
+    resizeMode: "cover",
   },
   stepTitle: {
     fontSize: 22,
