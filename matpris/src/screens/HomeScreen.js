@@ -5,12 +5,11 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
   FlatList,
   StyleSheet,
   ActivityIndicator,
 } from "react-native";
-import { COLORS, CATEGORIES } from "../utils/constants";
+import { COLORS } from "../utils/constants";
 import { getFilteredProducts } from "../utils/helpers";
 import { supabase } from "../utils/supabase";
 import StoreFilter from "../components/StoreFilter";
@@ -20,8 +19,6 @@ import ProductDetail from "../components/ProductDetail";
 export default function HomeScreen({ daysLeft }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStore, setSelectedStore] = useState("all");
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [sortOrder, setSortOrder] = useState("low");
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -42,7 +39,6 @@ export default function HomeScreen({ daysLeft }) {
       return;
     }
 
-    // Bygg opp produkter med priser i samme format som SAMPLE_DATA
     const productMap = {};
     for (const row of data) {
       const p = row.products;
@@ -63,19 +59,13 @@ export default function HomeScreen({ daysLeft }) {
         products,
         searchQuery,
         selectedStore,
-        selectedCategory,
-        sortOrder,
+        sortOrder: "low",
       }),
-    [products, searchQuery, selectedStore, selectedCategory, sortOrder]
+    [products, searchQuery, selectedStore]
   );
-
-  const toggleSort = () => {
-    setSortOrder((s) => (s === "low" ? "high" : "low"));
-  };
 
   const ListHeader = () => (
     <View>
-      {/* Header */}
       <View style={styles.header}>
         <View>
           <Text style={styles.title}>matpris</Text>
@@ -103,7 +93,6 @@ export default function HomeScreen({ daysLeft }) {
         </View>
       </View>
 
-      {/* Search */}
       <View style={styles.searchContainer}>
         <Text style={styles.searchIcon}>🔍</Text>
         <TextInput
@@ -115,38 +104,11 @@ export default function HomeScreen({ daysLeft }) {
         />
       </View>
 
-      {/* Store filter */}
       <StoreFilter
         selectedStore={selectedStore}
         onSelectStore={setSelectedStore}
       />
 
-      {/* Category + Sort */}
-      <View style={styles.filterRow}>
-        <View style={styles.categoryPicker}>
-          <TouchableOpacity
-            style={styles.categoryBtn}
-            onPress={() => {
-              const all = ["all", ...CATEGORIES];
-              const idx = all.indexOf(selectedCategory);
-              setSelectedCategory(all[(idx + 1) % all.length]);
-            }}
-          >
-            <Text style={styles.categoryText}>
-              {selectedCategory === "all" ? "Alle kategorier" : selectedCategory}
-            </Text>
-            <Text style={styles.categoryArrow}> ▼</Text>
-          </TouchableOpacity>
-        </View>
-
-        <TouchableOpacity style={styles.sortBtn} onPress={toggleSort}>
-          <Text style={styles.sortText}>
-            {sortOrder === "low" ? "↑ Billigst" : "↓ Dyrest"}
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Result count */}
       {!loading && (
         <Text style={styles.resultCount}>
           {filtered.length} {filtered.length === 1 ? "vare" : "varer"} funnet
@@ -253,44 +215,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 14,
     fontSize: 15,
-    color: COLORS.text,
-  },
-  filterRow: {
-    flexDirection: "row",
-    gap: 8,
-    marginBottom: 16,
-  },
-  categoryPicker: {
-    flex: 1,
-  },
-  categoryBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: COLORS.card,
-    borderWidth: 1,
-    borderColor: COLORS.borderDark,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  categoryText: {
-    fontSize: 13,
-    color: COLORS.text,
-  },
-  categoryArrow: {
-    fontSize: 10,
-    color: COLORS.textMuted,
-  },
-  sortBtn: {
-    backgroundColor: COLORS.card,
-    borderWidth: 1,
-    borderColor: COLORS.borderDark,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-  },
-  sortText: {
-    fontSize: 13,
     color: COLORS.text,
   },
   resultCount: {
