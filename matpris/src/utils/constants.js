@@ -11,19 +11,6 @@ export const STORES = {
   spar: { name: "Spar", color: "#007A3D", bg: "#E5F2EB" },
 };
 
-export const CATEGORIES = [
-  "Meieri",
-  "Kjøtt",
-  "Fisk",
-  "Frukt & Grønt",
-  "Tørrvarer",
-  "Drikke",
-  "Pålegg",
-  "Sauser",
-  "Ferdigmat",
-  "Frossenvarer",
-  "Snacks",
-];
 
 
 export const MOCK_RECEIPT_ITEMS = [
