@@ -64,82 +64,78 @@ export default function HomeScreen({ daysLeft }) {
     [products, searchQuery, selectedStore]
   );
 
-  const ListHeader = () => (
-    <View>
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.title}>matpris</Text>
-          <Text style={styles.subtitle}>
-            {products.length} varer · 8 butikker · oppdatert i dag
-          </Text>
-        </View>
-        <View
-          style={[
-            styles.accessBadge,
-            {
-              backgroundColor: daysLeft > 7 ? "#EFF5E5" : "#FEF3E3",
-              borderColor: daysLeft > 7 ? "#C8DDB3" : "#F7C97E",
-            },
-          ]}
-        >
-          <Text
-            style={[
-              styles.accessText,
-              { color: daysLeft > 7 ? "#4A7A1A" : "#C87D1A" },
-            ]}
-          >
-            {daysLeft}d igjen
-          </Text>
-        </View>
-      </View>
-
-      <View style={styles.searchContainer}>
-        <Text style={styles.searchIcon}>🔍</Text>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Søk etter matvare..."
-          placeholderTextColor={COLORS.textMuted}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-      </View>
-
-      <StoreFilter
-        selectedStore={selectedStore}
-        onSelectStore={setSelectedStore}
-      />
-
-      {!loading && (
-        <Text style={styles.resultCount}>
-          {filtered.length} {filtered.length === 1 ? "vare" : "varer"} funnet
-        </Text>
-      )}
-    </View>
-  );
-
-  const EmptyList = () => (
-    <View style={styles.empty}>
-      {loading ? (
-        <ActivityIndicator size="large" color={COLORS.accent} />
-      ) : (
-        <>
-          <Text style={styles.emptyIcon}>🔍</Text>
-          <Text style={styles.emptyText}>Ingen varer funnet</Text>
-          <Text style={styles.emptyHint}>
-            Prøv et annet søkeord eller fjern filtere
-          </Text>
-        </>
-      )}
-    </View>
-  );
-
   return (
     <View style={styles.container}>
+      {/* Fast header utenfor FlatList */}
+      <View style={styles.topSection}>
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.title}>matpris</Text>
+            <Text style={styles.subtitle}>
+              {products.length} varer · 8 butikker · oppdatert i dag
+            </Text>
+          </View>
+          <View
+            style={[
+              styles.accessBadge,
+              {
+                backgroundColor: daysLeft > 7 ? "#EFF5E5" : "#FEF3E3",
+                borderColor: daysLeft > 7 ? "#C8DDB3" : "#F7C97E",
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.accessText,
+                { color: daysLeft > 7 ? "#4A7A1A" : "#C87D1A" },
+              ]}
+            >
+              {daysLeft}d igjen
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.searchContainer}>
+          <Text style={styles.searchIcon}>🔍</Text>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Søk etter matvare..."
+            placeholderTextColor={COLORS.textMuted}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
+
+        <StoreFilter
+          selectedStore={selectedStore}
+          onSelectStore={setSelectedStore}
+        />
+
+        {!loading && (
+          <Text style={styles.resultCount}>
+            {filtered.length} {filtered.length === 1 ? "vare" : "varer"} funnet
+          </Text>
+        )}
+      </View>
+
       <FlatList
         data={filtered}
         keyExtractor={(item) => item.id}
-        ListHeaderComponent={ListHeader}
-        ListEmptyComponent={EmptyList}
+        ListEmptyComponent={
+          <View style={styles.empty}>
+            {loading ? (
+              <ActivityIndicator size="large" color={COLORS.accent} />
+            ) : (
+              <>
+                <Text style={styles.emptyIcon}>🔍</Text>
+                <Text style={styles.emptyText}>Ingen varer funnet</Text>
+                <Text style={styles.emptyHint}>
+                  Prøv et annet søkeord eller fjern filtere
+                </Text>
+              </>
+            )}
+          </View>
+        }
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
         renderItem={({ item }) => (
@@ -165,9 +161,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.bg,
   },
-  list: {
-    padding: 20,
+  topSection: {
+    paddingHorizontal: 20,
     paddingTop: 60,
+  },
+  list: {
+    paddingHorizontal: 20,
+    paddingTop: 10,
     paddingBottom: 100,
   },
   header: {
