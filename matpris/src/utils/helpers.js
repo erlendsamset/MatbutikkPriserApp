@@ -1,6 +1,6 @@
 // src/utils/helpers.js
 
-import { STORES, SAMPLE_DATA } from "./constants";
+import { STORES } from "./constants";
 
 export function getCheapestStore(product) {
   let minPrice = Infinity;
@@ -17,35 +17,32 @@ export function getCheapestStore(product) {
 }
 
 export function getFilteredProducts({
+  products = [],
   searchQuery = "",
   selectedStore = "all",
   selectedCategory = "all",
   sortOrder = "low",
 }) {
-  let products = [...SAMPLE_DATA];
+  let result = [...products];
 
-  // Filter by search
   if (searchQuery.trim()) {
     const q = searchQuery.toLowerCase().trim();
-    products = products.filter(
+    result = result.filter(
       (p) =>
         p.name.toLowerCase().includes(q) ||
         p.category.toLowerCase().includes(q)
     );
   }
 
-  // Filter by category
   if (selectedCategory !== "all") {
-    products = products.filter((p) => p.category === selectedCategory);
+    result = result.filter((p) => p.category === selectedCategory);
   }
 
-  // Filter by store (only show products available at this store)
   if (selectedStore !== "all") {
-    products = products.filter((p) => p.prices[selectedStore] !== undefined);
+    result = result.filter((p) => p.prices[selectedStore] !== undefined);
   }
 
-  // Sort by price
-  products.sort((a, b) => {
+  result.sort((a, b) => {
     const priceA =
       selectedStore !== "all"
         ? a.prices[selectedStore] || 999
@@ -58,7 +55,7 @@ export function getFilteredProducts({
     return sortOrder === "low" ? priceA - priceB : priceB - priceA;
   });
 
-  return products;
+  return result;
 }
 
 export function formatPrice(price) {

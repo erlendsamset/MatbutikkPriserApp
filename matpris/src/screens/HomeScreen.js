@@ -1,6 +1,6 @@
 // src/screens/HomeScreen.js
 
-import React, { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,9 +8,11 @@ import {
   TouchableOpacity,
   FlatList,
   StyleSheet,
+  ActivityIndicator,
 } from "react-native";
 import { COLORS, CATEGORIES } from "../utils/constants";
 import { getFilteredProducts } from "../utils/helpers";
+import { supabase } from "../utils/supabase";
 import StoreFilter from "../components/StoreFilter";
 import ProductCard from "../components/ProductCard";
 import ProductDetail from "../components/ProductDetail";
@@ -21,16 +23,50 @@ export default function HomeScreen({ daysLeft }) {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortOrder, setSortOrder] = useState("low");
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("prices")
+      .select("product_id, store, price, products(id, name, category)");
+
+    if (error) {
+      console.error("Feil ved henting av produkter:", error.message);
+      setLoading(false);
+      return;
+    }
+
+    // Bygg opp produkter med priser i samme format som SAMPLE_DATA
+    const productMap = {};
+    for (const row of data) {
+      const p = row.products;
+      if (!p) continue;
+      if (!productMap[p.id]) {
+        productMap[p.id] = { id: p.id, name: p.name, category: p.category, prices: {} };
+      }
+      productMap[p.id].prices[row.store] = parseFloat(row.price);
+    }
+
+    setProducts(Object.values(productMap));
+    setLoading(false);
+  };
 
   const filtered = useMemo(
     () =>
       getFilteredProducts({
+        products,
         searchQuery,
         selectedStore,
         selectedCategory,
         sortOrder,
       }),
-    [searchQuery, selectedStore, selectedCategory, sortOrder]
+    [products, searchQuery, selectedStore, selectedCategory, sortOrder]
   );
 
   const toggleSort = () => {
@@ -44,7 +80,7 @@ export default function HomeScreen({ daysLeft }) {
         <View>
           <Text style={styles.title}>matpris</Text>
           <Text style={styles.subtitle}>
-            15 varer · 8 butikker · oppdatert i dag
+            {products.length} varer · 8 butikker · oppdatert i dag
           </Text>
         </View>
         <View
@@ -91,16 +127,13 @@ export default function HomeScreen({ daysLeft }) {
           <TouchableOpacity
             style={styles.categoryBtn}
             onPress={() => {
-              // Cycle through categories
               const all = ["all", ...CATEGORIES];
               const idx = all.indexOf(selectedCategory);
               setSelectedCategory(all[(idx + 1) % all.length]);
             }}
           >
             <Text style={styles.categoryText}>
-              {selectedCategory === "all"
-                ? "Alle kategorier"
-                : selectedCategory}
+              {selectedCategory === "all" ? "Alle kategorier" : selectedCategory}
             </Text>
             <Text style={styles.categoryArrow}> ▼</Text>
           </TouchableOpacity>
@@ -114,19 +147,27 @@ export default function HomeScreen({ daysLeft }) {
       </View>
 
       {/* Result count */}
-      <Text style={styles.resultCount}>
-        {filtered.length} {filtered.length === 1 ? "vare" : "varer"} funnet
-      </Text>
+      {!loading && (
+        <Text style={styles.resultCount}>
+          {filtered.length} {filtered.length === 1 ? "vare" : "varer"} funnet
+        </Text>
+      )}
     </View>
   );
 
   const EmptyList = () => (
     <View style={styles.empty}>
-      <Text style={styles.emptyIcon}>🔍</Text>
-      <Text style={styles.emptyText}>Ingen varer funnet</Text>
-      <Text style={styles.emptyHint}>
-        Prøv et annet søkeord eller fjern filtere
-      </Text>
+      {loading ? (
+        <ActivityIndicator size="large" color={COLORS.accent} />
+      ) : (
+        <>
+          <Text style={styles.emptyIcon}>🔍</Text>
+          <Text style={styles.emptyText}>Ingen varer funnet</Text>
+          <Text style={styles.emptyHint}>
+            Prøv et annet søkeord eller fjern filtere
+          </Text>
+        </>
+      )}
     </View>
   );
 
