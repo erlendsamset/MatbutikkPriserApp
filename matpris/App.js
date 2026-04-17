@@ -6,11 +6,12 @@ import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import HomeScreen from "./src/screens/HomeScreen";
+import TilbudScreen from "./src/screens/TilbudScreen";
 import ScanScreen from "./src/screens/ScanScreen";
 import ProfileScreen from "./src/screens/ProfileScreen";
 import BottomNav from "./src/components/BottomNav";
 
-const SCREENS = ["home", "scan", "profile"];
+const SCREENS = ["home", "deals", "scan", "profile"];
 const { width } = Dimensions.get("window");
 
 export default function App() {
@@ -49,6 +50,9 @@ export default function App() {
         >
           <View style={styles.page}>
             <HomeScreen daysLeft={daysLeft} />
+          </View>
+          <View style={styles.page}>
+            <TilbudScreen />
           </View>
           <View style={styles.page}>
             <ScanScreen

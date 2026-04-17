@@ -1,11 +1,11 @@
 // src/components/BottomNav.js
 
-import React from "react";
 import { View, TouchableOpacity, Text, StyleSheet } from "react-native";
 import { COLORS } from "../utils/constants";
 
 const tabs = [
   { key: "home", label: "Søk", icon: "🔍" },
+  { key: "deals", label: "Tilbud", icon: "🏷️" },
   { key: "scan", label: "Skann", icon: "📷" },
   { key: "profile", label: "Profil", icon: "👤" },
 ];
