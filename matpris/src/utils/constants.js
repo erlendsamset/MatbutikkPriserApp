@@ -32,6 +32,5 @@ export const COLORS = {
   accent: "#1A4023",
   accentLight: "#EFF5E5",
   success: "#6B9B1E",
-  warning: "#F7941E",
   danger: "#C0392B",
 };

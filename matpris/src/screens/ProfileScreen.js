@@ -1,6 +1,5 @@
 // src/screens/ProfileScreen.js
 
-import React from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
 import { STORES, COLORS } from "../utils/constants";
 

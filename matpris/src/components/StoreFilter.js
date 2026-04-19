@@ -1,6 +1,5 @@
 // src/components/StoreFilter.js
 
-import React from "react";
 import { ScrollView, TouchableOpacity, Text, StyleSheet } from "react-native";
 import { STORES, COLORS } from "../utils/constants";
 

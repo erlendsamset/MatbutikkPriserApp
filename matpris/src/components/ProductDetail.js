@@ -1,6 +1,5 @@
 // src/components/ProductDetail.js
 
-import React from "react";
 import {
   View,
   Text,
