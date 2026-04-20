@@ -1,13 +1,6 @@
-// src/screens/HomeScreen.js
-
 import { useState, useMemo, useEffect } from "react";
 import {
-  View,
-  Text,
-  TextInput,
-  FlatList,
-  StyleSheet,
-  ActivityIndicator,
+  View, Text, TextInput, FlatList, StyleSheet, ActivityIndicator,
 } from "react-native";
 import { COLORS } from "../utils/constants";
 import { getFilteredProducts } from "../utils/helpers";
@@ -23,9 +16,7 @@ export default function HomeScreen({ daysLeft }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
+  useEffect(() => { fetchProducts(); }, []);
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -54,19 +45,16 @@ export default function HomeScreen({ daysLeft }) {
   };
 
   const filtered = useMemo(
-    () =>
-      getFilteredProducts({
-        products,
-        searchQuery,
-        selectedStore,
-        sortOrder: "low",
-      }),
+    () => getFilteredProducts({ products, searchQuery, selectedStore, sortOrder: "low" }),
     [products, searchQuery, selectedStore]
   );
 
+  const badgeStyle = daysLeft > 7
+    ? { bg: "#EFF5E5", border: "#C8DDB3", text: "#4A7A1A" }
+    : { bg: "#FEF3E3", border: "#F7C97E", text: "#C87D1A" };
+
   return (
     <View style={styles.container}>
-      {/* Fast header utenfor FlatList */}
       <View style={styles.topSection}>
         <View style={styles.header}>
           <View>
@@ -75,23 +63,8 @@ export default function HomeScreen({ daysLeft }) {
               {products.length} varer · 8 butikker · oppdatert i dag
             </Text>
           </View>
-          <View
-            style={[
-              styles.accessBadge,
-              {
-                backgroundColor: daysLeft > 7 ? "#EFF5E5" : "#FEF3E3",
-                borderColor: daysLeft > 7 ? "#C8DDB3" : "#F7C97E",
-              },
-            ]}
-          >
-            <Text
-              style={[
-                styles.accessText,
-                { color: daysLeft > 7 ? "#4A7A1A" : "#C87D1A" },
-              ]}
-            >
-              {daysLeft}d igjen
-            </Text>
+          <View style={[styles.accessBadge, { backgroundColor: badgeStyle.bg, borderColor: badgeStyle.border }]}>
+            <Text style={[styles.accessText, { color: badgeStyle.text }]}>{daysLeft}d igjen</Text>
           </View>
         </View>
 
@@ -106,10 +79,7 @@ export default function HomeScreen({ daysLeft }) {
           />
         </View>
 
-        <StoreFilter
-          selectedStore={selectedStore}
-          onSelectStore={setSelectedStore}
-        />
+        <StoreFilter selectedStore={selectedStore} onSelectStore={setSelectedStore} />
 
         {!loading && (
           <Text style={styles.resultCount}>
@@ -121,21 +91,6 @@ export default function HomeScreen({ daysLeft }) {
       <FlatList
         data={filtered}
         keyExtractor={(item) => item.id}
-        ListEmptyComponent={
-          <View style={styles.empty}>
-            {loading ? (
-              <ActivityIndicator size="large" color={COLORS.accent} />
-            ) : (
-              <>
-                <Text style={styles.emptyIcon}>🔍</Text>
-                <Text style={styles.emptyText}>Ingen varer funnet</Text>
-                <Text style={styles.emptyHint}>
-                  Prøv et annet søkeord eller fjern filtere
-                </Text>
-              </>
-            )}
-          </View>
-        }
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
         renderItem={({ item }) => (
@@ -145,6 +100,19 @@ export default function HomeScreen({ daysLeft }) {
             onPress={() => setSelectedProduct(item)}
           />
         )}
+        ListEmptyComponent={
+          <View style={styles.empty}>
+            {loading ? (
+              <ActivityIndicator size="large" color={COLORS.accent} />
+            ) : (
+              <>
+                <Text style={styles.emptyIcon}>🔍</Text>
+                <Text style={styles.emptyText}>Ingen varer funnet</Text>
+                <Text style={styles.emptyHint}>Prøv et annet søkeord eller fjern filtere</Text>
+              </>
+            )}
+          </View>
+        }
       />
 
       <ProductDetail
@@ -157,46 +125,19 @@ export default function HomeScreen({ daysLeft }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.bg,
-  },
-  topSection: {
-    paddingHorizontal: 20,
-    paddingTop: 60,
-  },
-  list: {
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 100,
-  },
+  container: { flex: 1, backgroundColor: COLORS.bg },
+  topSection: { paddingHorizontal: 20, paddingTop: 60 },
+  list: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 100 },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 20,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: COLORS.text,
-    letterSpacing: -0.5,
-  },
-  subtitle: {
-    fontSize: 12,
-    color: COLORS.textMuted,
-    marginTop: 2,
-  },
-  accessBadge: {
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderWidth: 1,
-  },
-  accessText: {
-    fontSize: 11,
-    fontWeight: "600",
-  },
+  title: { fontSize: 28, fontWeight: "700", color: COLORS.text, letterSpacing: -0.5 },
+  subtitle: { fontSize: 12, color: COLORS.textMuted, marginTop: 2 },
+  accessBadge: { borderRadius: 10, paddingHorizontal: 10, paddingVertical: 6, borderWidth: 1 },
+  accessText: { fontSize: 11, fontWeight: "600" },
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -207,36 +148,11 @@ const styles = StyleSheet.create({
     marginBottom: 14,
     paddingHorizontal: 14,
   },
-  searchIcon: {
-    fontSize: 16,
-    marginRight: 10,
-  },
-  searchInput: {
-    flex: 1,
-    paddingVertical: 14,
-    fontSize: 15,
-    color: COLORS.text,
-  },
-  resultCount: {
-    fontSize: 12,
-    color: COLORS.textMuted,
-    marginBottom: 10,
-  },
-  empty: {
-    alignItems: "center",
-    paddingVertical: 40,
-  },
-  emptyIcon: {
-    fontSize: 40,
-    marginBottom: 8,
-  },
-  emptyText: {
-    fontSize: 14,
-    color: COLORS.textMuted,
-  },
-  emptyHint: {
-    fontSize: 12,
-    color: COLORS.textMuted,
-    marginTop: 4,
-  },
+  searchIcon: { fontSize: 16, marginRight: 10 },
+  searchInput: { flex: 1, paddingVertical: 14, fontSize: 15, color: COLORS.text },
+  resultCount: { fontSize: 12, color: COLORS.textMuted, marginBottom: 10 },
+  empty: { alignItems: "center", paddingVertical: 40 },
+  emptyIcon: { fontSize: 40, marginBottom: 8 },
+  emptyText: { fontSize: 14, color: COLORS.textMuted },
+  emptyHint: { fontSize: 12, color: COLORS.textMuted, marginTop: 4 },
 });

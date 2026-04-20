@@ -1,21 +1,13 @@
-// src/screens/ScanScreen.js
-
 import { useState } from "react";
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  Image,
-  StyleSheet,
-  ActivityIndicator,
+  View, Text, TouchableOpacity, ScrollView, Image, StyleSheet, ActivityIndicator,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { STORES, COLORS, MOCK_RECEIPT_ITEMS } from "../utils/constants";
 import { supabase } from "../utils/supabase";
 
 export default function ScanScreen({ onGoBack, totalScans, onScanComplete }) {
-  const [step, setStep] = useState(0); // 0=camera, 1=store, 2=review, 3=done
+  const [step, setStep] = useState(0);
   const [selectedStore, setSelectedStore] = useState(null);
   const [items, setItems] = useState([]);
   const [photo, setPhoto] = useState(null);
@@ -28,12 +20,7 @@ export default function ScanScreen({ onGoBack, totalScans, onScanComplete }) {
       alert("Appen trenger tilgang til kameraet.");
       return;
     }
-
-    const result = await ImagePicker.launchCameraAsync({
-      allowsEditing: true,
-      quality: 0.8,
-    });
-
+    const result = await ImagePicker.launchCameraAsync({ allowsEditing: true, quality: 0.8 });
     if (!result.canceled) {
       setPhoto(result.assets[0].uri);
       setItems(MOCK_RECEIPT_ITEMS);
@@ -55,46 +42,33 @@ export default function ScanScreen({ onGoBack, totalScans, onScanComplete }) {
   const fetchStoreTotals = async () => {
     setLoadingComparison(true);
 
-    const itemNames = items.map((i) => i.name);
-
-    // Hent produkt-IDer som matcher varenavn
     const { data: products, error: prodError } = await supabase
       .from("products")
       .select("id, name")
-      .in("name", itemNames);
+      .in("name", items.map((i) => i.name));
 
     if (prodError || !products?.length) {
       setLoadingComparison(false);
       return;
     }
 
-    const productIds = products.map((p) => p.id);
-
-    // Hent priser for disse produktene
     const { data: prices, error: priceError } = await supabase
       .from("prices")
       .select("store, price, product_id")
-      .in("product_id", productIds);
+      .in("product_id", products.map((p) => p.id));
 
     if (priceError || !prices?.length) {
       setLoadingComparison(false);
       return;
     }
 
-    // Bygg opp totalpris per butikk
     const totals = {};
     const counts = {};
-
     for (const row of prices) {
-      if (!totals[row.store]) {
-        totals[row.store] = 0;
-        counts[row.store] = 0;
-      }
-      totals[row.store] += parseFloat(row.price);
-      counts[row.store]++;
+      totals[row.store] = (totals[row.store] ?? 0) + parseFloat(row.price);
+      counts[row.store] = (counts[row.store] ?? 0) + 1;
     }
 
-    // Kun butikker som har minst 60% av varene
     const maxCount = Math.max(...Object.values(counts));
     const sorted = Object.entries(totals)
       .filter(([store]) => counts[store] >= maxCount * 0.6)
@@ -116,7 +90,6 @@ export default function ScanScreen({ onGoBack, totalScans, onScanComplete }) {
 
   const receiptTotal = items.reduce((sum, i) => sum + i.price, 0);
 
-  // Step 0: Camera
   if (step === 0) {
     return (
       <View style={styles.container}>
@@ -127,9 +100,7 @@ export default function ScanScreen({ onGoBack, totalScans, onScanComplete }) {
         <View style={styles.cameraBox}>
           <Text style={styles.cameraIcon}>📷</Text>
           <Text style={styles.cameraText}>Trykk for å ta bilde</Text>
-          <Text style={styles.cameraHint}>
-            Hold kvitteringen innenfor rammen
-          </Text>
+          <Text style={styles.cameraHint}>Hold kvitteringen innenfor rammen</Text>
         </View>
 
         <TouchableOpacity style={styles.captureBtn} onPress={handleTakePhoto}>
@@ -143,7 +114,6 @@ export default function ScanScreen({ onGoBack, totalScans, onScanComplete }) {
     );
   }
 
-  // Step 1: Select store
   if (step === 1) {
     return (
       <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
@@ -172,7 +142,6 @@ export default function ScanScreen({ onGoBack, totalScans, onScanComplete }) {
     );
   }
 
-  // Step 2: Review items
   if (step === 2) {
     const storeInfo = STORES[selectedStore];
     return (
@@ -184,7 +153,7 @@ export default function ScanScreen({ onGoBack, totalScans, onScanComplete }) {
         {photo && <Image source={{ uri: photo }} style={styles.photoPreview} />}
 
         <View style={styles.reviewHeader}>
-          <View style={[styles.storeDotLg, { backgroundColor: storeInfo?.color }]} />
+          <View style={[styles.storeDot, { backgroundColor: storeInfo?.color, marginRight: 8, marginBottom: 0 }]} />
           <Text style={styles.stepTitle}>Bekreft varer</Text>
         </View>
         <Text style={styles.stepDesc}>{items.length} varer fra {storeInfo?.name}</Text>
@@ -211,13 +180,13 @@ export default function ScanScreen({ onGoBack, totalScans, onScanComplete }) {
     );
   }
 
-  // Step 3: Success + sammenligning
   const scannedStoreInfo = STORES[selectedStore];
   const cheapest = storeTotals[0];
   const scannedTotal = storeTotals.find((s) => s.store === selectedStore);
-  const savings = scannedTotal && cheapest && cheapest.store !== selectedStore
-    ? scannedTotal.total - cheapest.total
-    : null;
+  const savings =
+    scannedTotal && cheapest && cheapest.store !== selectedStore
+      ? scannedTotal.total - cheapest.total
+      : null;
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.successScroll}>
@@ -227,14 +196,12 @@ export default function ScanScreen({ onGoBack, totalScans, onScanComplete }) {
         {items.length} priser lagt til fra {scannedStoreInfo?.name}
       </Text>
 
-      {/* Totalsum for denne handleturen */}
       <View style={styles.totalCard}>
         <Text style={styles.totalCardLabel}>Du betalte</Text>
         <Text style={styles.totalCardAmount}>{receiptTotal.toFixed(2)} kr</Text>
         <Text style={styles.totalCardStore}>hos {scannedStoreInfo?.name}</Text>
       </View>
 
-      {/* Butikksammenligning */}
       {loadingComparison ? (
         <ActivityIndicator size="small" color={COLORS.accent} style={{ marginTop: 20 }} />
       ) : storeTotals.length > 1 ? (
@@ -256,16 +223,15 @@ export default function ScanScreen({ onGoBack, totalScans, onScanComplete }) {
             return (
               <View
                 key={store}
-                style={[
-                  styles.comparisonRow,
-                  isCheapest && styles.comparisonRowCheapest,
-                ]}
+                style={[styles.comparisonRow, isCheapest && styles.comparisonRowCheapest]}
               >
                 <View style={styles.comparisonLeft}>
                   <View style={[styles.compDot, { backgroundColor: storeInfo?.color }]} />
                   <Text style={styles.compStoreName}>{storeInfo?.name}</Text>
                   {isScanned && <Text style={styles.compTag}>din butikk</Text>}
-                  {isCheapest && !isScanned && <Text style={[styles.compTag, styles.compTagGreen]}>billigst</Text>}
+                  {isCheapest && !isScanned && (
+                    <Text style={[styles.compTag, styles.compTagGreen]}>billigst</Text>
+                  )}
                 </View>
                 <Text style={[styles.compTotal, isCheapest && styles.compTotalCheapest]}>
                   {total.toFixed(2)} kr
@@ -290,15 +256,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 60,
   },
-  scrollContent: {
-    paddingBottom: 120,
-  },
-  successScroll: {
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 120,
-    alignItems: "center",
-  },
+  scrollContent: { paddingBottom: 120 },
+  successScroll: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 120, alignItems: "center" },
   backBtn: { marginBottom: 20 },
   backText: { fontSize: 16, color: COLORS.textSecondary },
   cameraBox: {
@@ -315,33 +274,15 @@ const styles = StyleSheet.create({
   cameraIcon: { fontSize: 56, marginBottom: 12, opacity: 0.8 },
   cameraText: { color: "rgba(255,255,255,0.7)", fontSize: 14 },
   cameraHint: { color: "rgba(255,255,255,0.4)", fontSize: 12, marginTop: 4 },
-  captureBtn: {
-    backgroundColor: COLORS.accent,
-    padding: 16,
-    borderRadius: 14,
-    alignItems: "center",
-  },
+  captureBtn: { backgroundColor: COLORS.accent, padding: 16, borderRadius: 14, alignItems: "center" },
   captureBtnText: { color: "#fff", fontSize: 16, fontWeight: "600" },
   scanCount: { fontSize: 12, color: COLORS.textMuted, textAlign: "center", marginTop: 12 },
-  photoPreview: {
-    width: "100%",
-    height: 200,
-    borderRadius: 14,
-    marginBottom: 20,
-    resizeMode: "cover",
-  },
+  photoPreview: { width: "100%", height: 200, borderRadius: 14, marginBottom: 20, resizeMode: "cover" },
   stepTitle: { fontSize: 22, fontWeight: "700", color: COLORS.text, marginBottom: 6 },
   stepDesc: { fontSize: 13, color: "#7A8068", marginBottom: 20 },
   storeGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
-  storeCard: {
-    width: "47%",
-    padding: 18,
-    borderRadius: 14,
-    alignItems: "center",
-    borderWidth: 2,
-  },
+  storeCard: { width: "47%", padding: 18, borderRadius: 14, alignItems: "center", borderWidth: 2 },
   storeDot: { width: 10, height: 10, borderRadius: 5, marginBottom: 8 },
-  storeDotLg: { width: 10, height: 10, borderRadius: 5, marginRight: 8 },
   storeName: { fontSize: 14, fontWeight: "600" },
   reviewHeader: { flexDirection: "row", alignItems: "center", marginBottom: 6 },
   reviewItem: {
@@ -370,12 +311,7 @@ const styles = StyleSheet.create({
   },
   totalLabel: { fontSize: 15, fontWeight: "600", color: COLORS.text },
   totalAmount: { fontSize: 15, fontWeight: "700", color: COLORS.accent },
-  submitBtn: {
-    backgroundColor: COLORS.success,
-    padding: 16,
-    borderRadius: 14,
-    alignItems: "center",
-  },
+  submitBtn: { backgroundColor: COLORS.success, padding: 16, borderRadius: 14, alignItems: "center" },
   submitBtnText: { color: "#fff", fontSize: 16, fontWeight: "600" },
   successIcon: { fontSize: 64, marginBottom: 12 },
   successTitle: { fontSize: 24, fontWeight: "700", color: COLORS.text, marginBottom: 4 },
@@ -400,24 +336,9 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 20,
   },
-  comparisonTitle: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: COLORS.textSecondary,
-    marginBottom: 12,
-  },
-  savingsBanner: {
-    backgroundColor: COLORS.accentLight,
-    borderRadius: 10,
-    padding: 10,
-    marginBottom: 12,
-  },
-  savingsBannerText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: COLORS.accent,
-    textAlign: "center",
-  },
+  comparisonTitle: { fontSize: 13, fontWeight: "600", color: COLORS.textSecondary, marginBottom: 12 },
+  savingsBanner: { backgroundColor: COLORS.accentLight, borderRadius: 10, padding: 10, marginBottom: 12 },
+  savingsBannerText: { fontSize: 13, fontWeight: "600", color: COLORS.accent, textAlign: "center" },
   comparisonRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -444,10 +365,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 4,
   },
-  compTagGreen: {
-    color: COLORS.success,
-    backgroundColor: COLORS.accentLight,
-  },
+  compTagGreen: { color: COLORS.success, backgroundColor: COLORS.accentLight },
   compTotal: { fontSize: 14, fontWeight: "600", color: COLORS.text },
   compTotalCheapest: { color: COLORS.accent, fontWeight: "700" },
   doneBtn: {

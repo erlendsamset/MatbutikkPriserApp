@@ -1,12 +1,5 @@
-// src/components/ProductDetail.js
-
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  Modal,
-  ScrollView,
-  StyleSheet,
+  View, Text, TouchableOpacity, Modal, ScrollView, StyleSheet,
 } from "react-native";
 import { COLORS } from "../utils/constants";
 import { getCheapestStore, formatPrice, getStoreInfo } from "../utils/helpers";
@@ -16,27 +9,14 @@ export default function ProductDetail({ product, visible, onClose }) {
 
   const cheapest = getCheapestStore(product);
   const cheapestInfo = getStoreInfo(cheapest.store);
-  const sortedPrices = Object.entries(product.prices).sort(
-    (a, b) => a[1] - b[1]
-  );
+  const sortedPrices = Object.entries(product.prices).sort((a, b) => a[1] - b[1]);
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
-    >
-      <TouchableOpacity
-        style={styles.overlay}
-        activeOpacity={1}
-        onPress={onClose}
-      >
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={onClose}>
         <View style={styles.sheet} onStartShouldSetResponder={() => true}>
-          {/* Handle bar */}
           <View style={styles.handleBar} />
 
-          {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerText}>
               <Text style={styles.categoryLabel}>{product.category}</Text>
@@ -47,30 +27,21 @@ export default function ProductDetail({ product, visible, onClose }) {
             </TouchableOpacity>
           </View>
 
-          {/* Cheapest highlight */}
           <View
-            style={[
-              styles.cheapestBox,
-              {
-                backgroundColor: cheapestInfo.bg,
-                borderColor: cheapestInfo.color + "22",
-              },
-            ]}
+            style={[styles.cheapestBox, {
+              backgroundColor: cheapestInfo.bg,
+              borderColor: cheapestInfo.color + "22",
+            }]}
           >
             <View>
               <Text style={styles.cheapestLabel}>Billigst hos</Text>
-              <Text
-                style={[styles.cheapestStore, { color: cheapestInfo.color }]}
-              >
+              <Text style={[styles.cheapestStore, { color: cheapestInfo.color }]}>
                 {cheapestInfo.name}
               </Text>
             </View>
-            <Text style={styles.cheapestPrice}>
-              {formatPrice(cheapest.price)} kr
-            </Text>
+            <Text style={styles.cheapestPrice}>{formatPrice(cheapest.price)} kr</Text>
           </View>
 
-          {/* All prices */}
           <Text style={styles.sectionTitle}>
             Alle priser ({sortedPrices.length} butikker)
           </Text>
@@ -84,24 +55,14 @@ export default function ProductDetail({ product, visible, onClose }) {
               return (
                 <View
                   key={storeKey}
-                  style={[
-                    styles.priceRow,
-                    {
-                      backgroundColor: isCheapest ? "#F0F5EA" : COLORS.card,
-                      borderColor: isCheapest ? "#C8DDB3" : COLORS.border,
-                    },
-                  ]}
+                  style={[styles.priceRow, {
+                    backgroundColor: isCheapest ? "#F0F5EA" : COLORS.card,
+                    borderColor: isCheapest ? "#C8DDB3" : COLORS.border,
+                  }]}
                 >
                   <View style={styles.priceRowLeft}>
-                    <View
-                      style={[styles.dot, { backgroundColor: store.color }]}
-                    />
-                    <Text
-                      style={[
-                        styles.storeName,
-                        isCheapest && { fontWeight: "600" },
-                      ]}
-                    >
+                    <View style={[styles.dot, { backgroundColor: store.color }]} />
+                    <Text style={[styles.storeName, isCheapest && { fontWeight: "600" }]}>
                       {store.name}
                     </Text>
                     {isCheapest && (
@@ -112,19 +73,10 @@ export default function ProductDetail({ product, visible, onClose }) {
                   </View>
 
                   <View style={styles.priceRowRight}>
-                    <Text
-                      style={[
-                        styles.rowPrice,
-                        isCheapest && { fontWeight: "700" },
-                      ]}
-                    >
+                    <Text style={[styles.rowPrice, isCheapest && { fontWeight: "700" }]}>
                       {formatPrice(price)} kr
                     </Text>
-                    {diff > 0 && (
-                      <Text style={styles.priceDiff}>
-                        +{formatPrice(diff)}
-                      </Text>
-                    )}
+                    {diff > 0 && <Text style={styles.priceDiff}>+{formatPrice(diff)}</Text>}
                   </View>
                 </View>
               );
@@ -132,8 +84,7 @@ export default function ProductDetail({ product, visible, onClose }) {
           </ScrollView>
 
           <Text style={styles.footer}>
-            Priser basert på {2 + Math.floor(Math.random() * 8)} kvitteringer
-            siste 7 dager
+            Priser basert på {2 + Math.floor(Math.random() * 8)} kvitteringer siste 7 dager
           </Text>
         </View>
       </TouchableOpacity>
@@ -169,10 +120,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     marginBottom: 16,
   },
-  headerText: {
-    flex: 1,
-    marginRight: 12,
-  },
+  headerText: { flex: 1, marginRight: 12 },
   categoryLabel: {
     fontSize: 11,
     color: "#7A8068",
@@ -194,10 +142,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  closeBtnText: {
-    fontSize: 16,
-    color: COLORS.textSecondary,
-  },
+  closeBtnText: { fontSize: 16, color: COLORS.textSecondary },
   cheapestBox: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -207,20 +152,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: 20,
   },
-  cheapestLabel: {
-    fontSize: 11,
-    color: "#7A8068",
-  },
-  cheapestStore: {
-    fontSize: 15,
-    fontWeight: "600",
-    marginTop: 2,
-  },
-  cheapestPrice: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: COLORS.text,
-  },
+  cheapestLabel: { fontSize: 11, color: "#7A8068" },
+  cheapestStore: { fontSize: 15, fontWeight: "600", marginTop: 2 },
+  cheapestPrice: { fontSize: 28, fontWeight: "700", color: COLORS.text },
   sectionTitle: {
     fontSize: 13,
     fontWeight: "600",
@@ -229,9 +163,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     marginBottom: 10,
   },
-  priceList: {
-    maxHeight: 300,
-  },
+  priceList: { maxHeight: 300 },
   priceRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -241,49 +173,18 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     borderWidth: 1,
   },
-  priceRowLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  storeName: {
-    fontSize: 15,
-    color: COLORS.text,
-  },
+  priceRowLeft: { flexDirection: "row", alignItems: "center", gap: 10 },
+  dot: { width: 8, height: 8, borderRadius: 4 },
+  storeName: { fontSize: 15, color: COLORS.text },
   badge: {
     backgroundColor: COLORS.success,
     paddingHorizontal: 7,
     paddingVertical: 2,
     borderRadius: 6,
   },
-  badgeText: {
-    fontSize: 10,
-    fontWeight: "600",
-    color: "#fff",
-  },
-  priceRowRight: {
-    alignItems: "flex-end",
-    flexDirection: "row",
-    gap: 6,
-  },
-  rowPrice: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: COLORS.text,
-  },
-  priceDiff: {
-    fontSize: 11,
-    color: COLORS.danger,
-  },
-  footer: {
-    fontSize: 11,
-    color: "#B0B8A4",
-    textAlign: "center",
-    marginTop: 14,
-  },
+  badgeText: { fontSize: 10, fontWeight: "600", color: "#fff" },
+  priceRowRight: { alignItems: "flex-end", flexDirection: "row", gap: 6 },
+  rowPrice: { fontSize: 16, fontWeight: "500", color: COLORS.text },
+  priceDiff: { fontSize: 11, color: COLORS.danger },
+  footer: { fontSize: 11, color: "#B0B8A4", textAlign: "center", marginTop: 14 },
 });

@@ -1,19 +1,10 @@
-// src/utils/helpers.js
-
 import { STORES } from "./constants";
 
 export function getCheapestStore(product) {
-  let minPrice = Infinity;
-  let cheapestStore = null;
-
-  for (const [storeKey, price] of Object.entries(product.prices)) {
-    if (price < minPrice) {
-      minPrice = price;
-      cheapestStore = storeKey;
-    }
-  }
-
-  return { store: cheapestStore, price: minPrice };
+  return Object.entries(product.prices).reduce(
+    (best, [store, price]) => (price < best.price ? { store, price } : best),
+    { store: null, price: Infinity }
+  );
 }
 
 export function getFilteredProducts({
@@ -23,45 +14,20 @@ export function getFilteredProducts({
   selectedCategory = "all",
   sortOrder = "low",
 }) {
-  let result = [...products];
+  const q = searchQuery.toLowerCase().trim();
+  const getPrice = (p) =>
+    selectedStore !== "all"
+      ? p.prices[selectedStore] ?? 999
+      : Math.min(...Object.values(p.prices));
 
-  if (searchQuery.trim()) {
-    const q = searchQuery.toLowerCase().trim();
-    result = result.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.category.toLowerCase().includes(q)
-    );
-  }
-
-  if (selectedCategory !== "all") {
-    result = result.filter((p) => p.category === selectedCategory);
-  }
-
-  if (selectedStore !== "all") {
-    result = result.filter((p) => p.prices[selectedStore] !== undefined);
-  }
-
-  result.sort((a, b) => {
-    const priceA =
-      selectedStore !== "all"
-        ? a.prices[selectedStore] || 999
-        : Math.min(...Object.values(a.prices));
-    const priceB =
-      selectedStore !== "all"
-        ? b.prices[selectedStore] || 999
-        : Math.min(...Object.values(b.prices));
-
-    return sortOrder === "low" ? priceA - priceB : priceB - priceA;
-  });
-
-  return result;
+  return [...products]
+    .filter((p) => !q || p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q))
+    .filter((p) => selectedCategory === "all" || p.category === selectedCategory)
+    .filter((p) => selectedStore === "all" || p.prices[selectedStore] !== undefined)
+    .sort((a, b) => sortOrder === "low" ? getPrice(a) - getPrice(b) : getPrice(b) - getPrice(a));
 }
 
-export function formatPrice(price) {
-  return price.toFixed(2);
-}
+export const formatPrice = (price) => price.toFixed(2);
 
-export function getStoreInfo(storeKey) {
-  return STORES[storeKey] || { name: storeKey, color: "#999", bg: "#f0f0f0" };
-}
+export const getStoreInfo = (storeKey) =>
+  STORES[storeKey] ?? { name: storeKey, color: "#999", bg: "#f0f0f0" };
