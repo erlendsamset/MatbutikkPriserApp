@@ -3,8 +3,9 @@ import {
   View, Text, TouchableOpacity, ScrollView, Image, StyleSheet, ActivityIndicator,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import { STORES, COLORS, MOCK_RECEIPT_ITEMS } from "../utils/constants";
+import { STORES, COLORS } from "../utils/constants";
 import { supabase } from "../utils/supabase";
+import { runOCR } from "../utils/ocr";
 
 export default function ScanScreen({ onGoBack, totalScans, onScanComplete }) {
   const [step, setStep] = useState(0);
@@ -13,6 +14,8 @@ export default function ScanScreen({ onGoBack, totalScans, onScanComplete }) {
   const [photo, setPhoto] = useState(null);
   const [storeTotals, setStoreTotals] = useState([]);
   const [loadingComparison, setLoadingComparison] = useState(false);
+  const [loadingOCR, setLoadingOCR] = useState(false);
+  const [ocrError, setOcrError] = useState(null);
 
   const handleTakePhoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -22,8 +25,18 @@ export default function ScanScreen({ onGoBack, totalScans, onScanComplete }) {
     }
     const result = await ImagePicker.launchCameraAsync({ allowsEditing: true, quality: 0.8 });
     if (!result.canceled) {
-      setPhoto(result.assets[0].uri);
-      setItems(MOCK_RECEIPT_ITEMS);
+      const uri = result.assets[0].uri;
+      setPhoto(uri);
+      setOcrError(null);
+      setLoadingOCR(true);
+      try {
+        const parsed = await runOCR(uri);
+        setItems(parsed);
+      } catch (e) {
+        setOcrError(`Feil: ${e.message}`);
+      } finally {
+        setLoadingOCR(false);
+      }
       setStep(1);
     }
   };
@@ -122,6 +135,14 @@ export default function ScanScreen({ onGoBack, totalScans, onScanComplete }) {
         </TouchableOpacity>
 
         {photo && <Image source={{ uri: photo }} style={styles.photoPreview} />}
+
+        {loadingOCR && (
+          <View style={styles.ocrLoading}>
+            <ActivityIndicator size="small" color={COLORS.accent} />
+            <Text style={styles.ocrLoadingText}>Leser kvittering...</Text>
+          </View>
+        )}
+        {ocrError && <Text style={styles.ocrError}>{ocrError}</Text>}
 
         <Text style={styles.stepTitle}>Hvilken butikk?</Text>
         <Text style={styles.stepDesc}>Velg butikken kvitteringen er fra</Text>
@@ -377,4 +398,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   doneBtnText: { color: "#fff", fontSize: 15, fontWeight: "600" },
+  ocrLoading: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 12 },
+  ocrLoadingText: { fontSize: 13, color: COLORS.textSecondary },
+  ocrError: { fontSize: 13, color: COLORS.danger, marginBottom: 12 },
 });
