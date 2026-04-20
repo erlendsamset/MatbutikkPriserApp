@@ -15,7 +15,7 @@ import { COLORS } from "../utils/constants";
 import { supabase } from "../utils/supabase";
 
 export default function LoginScreen() {
-  const [mode, setMode] = useState("login"); // "login" | "register"
+  const [mode, setMode] = useState("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
