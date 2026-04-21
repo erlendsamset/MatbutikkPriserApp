@@ -38,6 +38,9 @@ export async function runOCR(imageUri) {
 
   const json = await response.json();
   const rawText = json.responses?.[0]?.textAnnotations?.[0]?.description ?? "";
+  console.log("=== OCR RAW TEXT ===");
+  console.log(rawText);
+  console.log("===================");
   return parseReceiptText(rawText);
 }
 
@@ -45,27 +48,44 @@ function parseReceiptText(text) {
   const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
   const items = [];
 
-  for (const line of lines) {
-    const lower = line.toLowerCase();
-    if (SKIP_KEYWORDS.some((kw) => lower.includes(kw))) continue;
+  const priceOnly = /^-?\d+[,\.]\d{2}$/;
+  const vatOnly = /^\d+%$/;
 
-    // Match price at end of line: e.g. "29,90" or "129.00" or "-15,00"
-    const priceMatch = line.match(/(-?\d+[,\.]\d{2})\s*$/);
-    if (!priceMatch) continue;
+  // Multi-line format: NAME / 15% / 29,90 (Rema 1000 og lignende)
+  for (let i = 2; i < lines.length; i++) {
+    if (priceOnly.test(lines[i]) && vatOnly.test(lines[i - 1])) {
+      const price = parseFloat(lines[i].replace(",", "."));
+      if (price <= 0) continue;
 
-    const price = parseFloat(priceMatch[1].replace(",", "."));
-    if (price <= 0) continue; // skip discounts/negative lines
+      const name = lines[i - 2];
+      if (SKIP_KEYWORDS.some((kw) => name.toLowerCase().includes(kw))) continue;
+      if (name.length < 2) continue;
 
-    // Remove price from end to get product name
-    const name = line
-      .slice(0, line.lastIndexOf(priceMatch[1]))
-      .replace(/\s*\d+\s*[xX]\s*$/, "") // remove quantity "2 x" suffix
-      .replace(/\s+/g, " ")
-      .trim();
+      items.push({ name, price });
+    }
+  }
 
-    if (name.length < 2) continue;
+  // Fallback: pris på samme linje som navn (Kiwi, Coop og lignende)
+  if (items.length === 0) {
+    for (const line of lines) {
+      const lower = line.toLowerCase();
+      if (SKIP_KEYWORDS.some((kw) => lower.includes(kw))) continue;
 
-    items.push({ name, price });
+      const priceMatch = line.match(/(-?\d+[,\.]\d{2})\s*$/);
+      if (!priceMatch) continue;
+
+      const price = parseFloat(priceMatch[1].replace(",", "."));
+      if (price <= 0) continue;
+
+      const name = line
+        .slice(0, line.lastIndexOf(priceMatch[1]))
+        .replace(/\s*\d+\s*[xX]\s*$/, "")
+        .replace(/\s+/g, " ")
+        .trim();
+
+      if (name.length < 2) continue;
+      items.push({ name, price });
+    }
   }
 
   return items;
