@@ -9,20 +9,25 @@ import StoreFilter from "../components/StoreFilter";
 import ProductCard from "../components/ProductCard";
 import ProductDetail from "../components/ProductDetail";
 
-export default function HomeScreen({ daysLeft }) {
+export default function HomeScreen({ daysLeft, refreshKey }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStore, setSelectedStore] = useState("all");
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => { fetchProducts(); }, []);
+  useEffect(() => { fetchProducts(); }, [refreshKey]);
 
   const fetchProducts = async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("prices")
       .select("product_id, store, price, products(id, name, category)");
+
+    console.log("=== HOMESCREEN FETCH ===");
+    console.log("data:", JSON.stringify(data));
+    console.log("error:", error?.message);
+    console.log("========================");
 
     if (error) {
       console.error("Feil ved henting av produkter:", error.message);

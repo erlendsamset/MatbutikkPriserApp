@@ -21,6 +21,7 @@ export default function App() {
   const [daysLeft, setDaysLeft] = useState(24);
   const [totalScans, setTotalScans] = useState(3);
   const [session, setSession] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [authLoading, setAuthLoading] = useState(true);
   const scrollRef = useRef(null);
 
@@ -47,6 +48,7 @@ export default function App() {
   const handleScanComplete = () => {
     setTotalScans((s) => s + 1);
     setDaysLeft(30);
+    setRefreshKey((k) => k + 1);
   };
 
   const navigateTo = (key) => {
@@ -85,7 +87,7 @@ export default function App() {
           style={styles.pager}
         >
           <View style={styles.page}>
-            <HomeScreen daysLeft={daysLeft} />
+            <HomeScreen daysLeft={daysLeft} refreshKey={refreshKey} />
           </View>
           <View style={styles.page}>
             <TilbudScreen />

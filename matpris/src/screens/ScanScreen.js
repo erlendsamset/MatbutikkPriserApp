@@ -7,6 +7,9 @@ import { STORES, COLORS } from "../utils/constants";
 import { supabase } from "../utils/supabase";
 import { runOCR } from "../utils/ocr";
 
+const normalize = (str) =>
+  str.toLowerCase().trim().replace(/[^a-zæøå0-9\s]/g, "").replace(/\s+/g, " ");
+
 export default function ScanScreen({ onGoBack, totalScans, onScanComplete }) {
   const [step, setStep] = useState(0);
   const [selectedStore, setSelectedStore] = useState(null);
@@ -61,45 +64,53 @@ export default function ScanScreen({ onGoBack, totalScans, onScanComplete }) {
         scanned_at: new Date().toISOString(),
         item_count: items.length,
         total_amount: receiptTotal,
-        status: "pending",
+        status: "processed",
       })
       .select()
       .single();
 
     if (receiptError || !receipt) { await fetchStoreTotals(); return; }
 
-    const { data: products } = await supabase.from("products").select("id, name");
+    const { data: aliases } = await supabase
+      .from("product_aliases")
+      .select("product_id, alias");
 
-    const matched = [];
-    const unmatched = [];
-
-    for (const item of items) {
-      const normalizedItem = item.name.toLowerCase().replace(/\s+/g, " ");
-      const product = products?.find((p) => {
-        const normalizedProduct = p.name.toLowerCase().replace(/\s+/g, " ");
-        return (
-          normalizedProduct.includes(normalizedItem) ||
-          normalizedItem.includes(normalizedProduct)
-        );
-      });
-
-      if (product) {
-        matched.push({ product_id: product.id, store: selectedStore, price: item.price });
-      } else {
-        unmatched.push({ receipt_id: receipt.id, raw_name: item.name, price: item.price });
-      }
+    const aliasMap = {};
+    for (const a of aliases ?? []) {
+      aliasMap[normalize(a.alias)] = a.product_id;
     }
 
-    console.log("=== MATCHING ===");
-    console.log("OCR items:", items.map(i => i.name));
-    console.log("Products:", products?.map(p => p.name));
-    console.log("Matched:", matched.length, "Unmatched:", unmatched.length);
-    console.log("================");
+    const priceRows = [];
 
-    if (matched.length > 0) await supabase.from("prices").insert(matched);
-    if (unmatched.length > 0) await supabase.from("unmatched_items").insert(unmatched);
+    for (const item of items) {
+      const key = normalize(item.name);
+      let productId = aliasMap[key];
 
-    await supabase.from("receipts").update({ status: "processed" }).eq("id", receipt.id);
+      if (!productId) {
+        const { data: newProduct, error: productError } = await supabase
+          .from("products")
+          .insert({ name: item.name })
+          .select()
+          .single();
+        console.log("Insert produkt:", item.name, "->", newProduct?.id, productError?.message);
+
+        if (!newProduct) {
+          console.log("Feil ved opprettelse av produkt:", item.name);
+          continue;
+        }
+        productId = newProduct.id;
+
+        await supabase.from("product_aliases").insert({
+          product_id: productId,
+          alias: item.name,
+          store: selectedStore,
+        });
+      }
+
+      priceRows.push({ product_id: productId, store: selectedStore, price: item.price });
+    }
+
+    if (priceRows.length > 0) await supabase.from("prices").insert(priceRows);
     await fetchStoreTotals();
   };
 
