@@ -87,18 +87,15 @@ export default function ScanScreen({ onGoBack, totalScans, onScanComplete }) {
       let productId = aliasMap[key];
 
       if (!productId) {
-        const { data: newProduct, error: productError } = await supabase
+        const { data: newProduct } = await supabase
           .from("products")
           .insert({ name: item.name })
           .select()
           .single();
-        console.log("Insert produkt:", item.name, "->", newProduct?.id, productError?.message);
 
-        if (!newProduct) {
-          console.log("Feil ved opprettelse av produkt:", item.name);
-          continue;
-        }
+        if (!newProduct) continue;
         productId = newProduct.id;
+        aliasMap[key] = productId;
 
         await supabase.from("product_aliases").insert({
           product_id: productId,

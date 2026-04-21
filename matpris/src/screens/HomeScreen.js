@@ -24,11 +24,6 @@ export default function HomeScreen({ daysLeft, refreshKey }) {
       .from("prices")
       .select("product_id, store, price, products(id, name, category)");
 
-    console.log("=== HOMESCREEN FETCH ===");
-    console.log("data:", JSON.stringify(data));
-    console.log("error:", error?.message);
-    console.log("========================");
-
     if (error) {
       console.error("Feil ved henting av produkter:", error.message);
       setLoading(false);
