@@ -49,6 +49,57 @@ export default function ScanScreen({ onGoBack, totalScans, onScanComplete }) {
   const handleSubmit = async () => {
     setStep(3);
     onScanComplete();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { await fetchStoreTotals(); return; }
+
+    const { data: receipt, error: receiptError } = await supabase
+      .from("receipts")
+      .insert({
+        user_id: user.id,
+        chain: selectedStore,
+        scanned_at: new Date().toISOString(),
+        item_count: items.length,
+        total_amount: receiptTotal,
+        status: "pending",
+      })
+      .select()
+      .single();
+
+    if (receiptError || !receipt) { await fetchStoreTotals(); return; }
+
+    const { data: products } = await supabase.from("products").select("id, name");
+
+    const matched = [];
+    const unmatched = [];
+
+    for (const item of items) {
+      const normalizedItem = item.name.toLowerCase().replace(/\s+/g, " ");
+      const product = products?.find((p) => {
+        const normalizedProduct = p.name.toLowerCase().replace(/\s+/g, " ");
+        return (
+          normalizedProduct.includes(normalizedItem) ||
+          normalizedItem.includes(normalizedProduct)
+        );
+      });
+
+      if (product) {
+        matched.push({ product_id: product.id, store: selectedStore, price: item.price });
+      } else {
+        unmatched.push({ receipt_id: receipt.id, raw_name: item.name, price: item.price });
+      }
+    }
+
+    console.log("=== MATCHING ===");
+    console.log("OCR items:", items.map(i => i.name));
+    console.log("Products:", products?.map(p => p.name));
+    console.log("Matched:", matched.length, "Unmatched:", unmatched.length);
+    console.log("================");
+
+    if (matched.length > 0) await supabase.from("prices").insert(matched);
+    if (unmatched.length > 0) await supabase.from("unmatched_items").insert(unmatched);
+
+    await supabase.from("receipts").update({ status: "processed" }).eq("id", receipt.id);
     await fetchStoreTotals();
   };
 
