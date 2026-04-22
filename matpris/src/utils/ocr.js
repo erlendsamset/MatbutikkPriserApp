@@ -4,6 +4,8 @@ const VISION_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_VISION_KEY;
 const VISION_URL = `https://vision.googleapis.com/v1/images:annotate?key=${VISION_API_KEY}`;
 
 // Lines containing these strings are skipped (totals, payment, VAT, etc.)
+const NUMERIC_ONLY = /^\d+([,\.]\d+)?$/;
+
 const SKIP_KEYWORDS = [
   "total", "totalt", "sum", "mva", "rabatt", "retur", "kontant",
   "visa", "mastercard", "vipps", "kort", "betalingsmåte", "tilbake",
@@ -62,6 +64,7 @@ function parseReceiptText(text) {
       const name = lines[i - 2].replace(/^#+/, "").trim();
       if (SKIP_KEYWORDS.some((kw) => name.toLowerCase().includes(kw))) continue;
       if (name.length < 2) continue;
+      if (NUMERIC_ONLY.test(name)) continue;
 
       items.push({ name, price });
     }
@@ -82,7 +85,7 @@ function parseReceiptText(text) {
       if (sameLineMatch) {
         const price = parseFloat(sameLineMatch[2].replace(",", "."));
         const name = sameLineMatch[1].replace(/^#+/, "").trim();
-        if (name.length >= 2 && price > 0 && !SKIP_KEYWORDS.some((kw) => name.toLowerCase().includes(kw))) {
+        if (name.length >= 2 && price > 0 && !NUMERIC_ONLY.test(name) && !SKIP_KEYWORDS.some((kw) => name.toLowerCase().includes(kw))) {
           items.push({ name, price });
         }
         continue;
@@ -92,7 +95,7 @@ function parseReceiptText(text) {
       if (i + 1 < lines.length && priceOnly.test(lines[i + 1])) {
         const price = parseFloat(lines[i + 1].replace(",", "."));
         const name = line.replace(/^#+/, "").trim();
-        if (name.length >= 2 && price > 0 && !SKIP_KEYWORDS.some((kw) => name.toLowerCase().includes(kw))) {
+        if (name.length >= 2 && price > 0 && !NUMERIC_ONLY.test(name) && !SKIP_KEYWORDS.some((kw) => name.toLowerCase().includes(kw))) {
           items.push({ name, price });
           i++;
         }
@@ -121,6 +124,7 @@ function parseReceiptText(text) {
       .trim();
 
     if (name.length < 2) continue;
+    if (NUMERIC_ONLY.test(name)) continue;
     items.push({ name, price });
   }
 
