@@ -10,6 +10,8 @@ const SKIP_KEYWORDS = [
   "du sparte", "du spart", "bonus", "pant", "handlepose", "pose",
   "kvittering", "butikk", "telefon", "org.nr", "dato", "tid",
   "kasse", "betjent", "trinn", "trekk",
+  "grunnlag", "bank", "overf", "salgs", "ant. varer", "term.",
+  "bax", "godkjent", "takk for",
 ];
 
 export async function runOCR(imageUri) {
@@ -51,13 +53,13 @@ function parseReceiptText(text) {
   const priceOnly = /^-?\d+[,\.]\d{2}$/;
   const vatOnly = /^\d+%$/;
 
-  // Multi-line format: NAME / 15% / 29,90 (Rema 1000 og lignende)
+  // Format 1: NAME / VAT% / PRICE (Rema 1000 og lignende)
   for (let i = 2; i < lines.length; i++) {
     if (priceOnly.test(lines[i]) && vatOnly.test(lines[i - 1])) {
       const price = parseFloat(lines[i].replace(",", "."));
       if (price <= 0) continue;
 
-      const name = lines[i - 2];
+      const name = lines[i - 2].replace(/^#+/, "").trim();
       if (SKIP_KEYWORDS.some((kw) => name.toLowerCase().includes(kw))) continue;
       if (name.length < 2) continue;
 
@@ -65,27 +67,61 @@ function parseReceiptText(text) {
     }
   }
 
-  // Fallback: pris på samme linje som navn (Kiwi, Coop og lignende)
-  if (items.length === 0) {
-    for (const line of lines) {
-      const lower = line.toLowerCase();
-      if (SKIP_KEYWORDS.some((kw) => lower.includes(kw))) continue;
+  if (items.length > 0) return items;
 
-      const priceMatch = line.match(/(-?\d+[,\.]\d{2})\s*$/);
-      if (!priceMatch) continue;
+  // Format 2: Bunnpris — linjer med # prefix
+  // OCR kan gi pris på samme linje (separert med mellomrom) eller på neste linje
+  const hasBunnprisItems = lines.some((l) => l.startsWith("#"));
+  if (hasBunnprisItems) {
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (!line.startsWith("#")) continue;
 
-      const price = parseFloat(priceMatch[1].replace(",", "."));
-      if (price <= 0) continue;
+      // Pris på samme linje: #NAVN    42.90
+      const sameLineMatch = line.match(/^(#\S.+?)\s{2,}(\d+[,\.]\d{2})\s*$/);
+      if (sameLineMatch) {
+        const price = parseFloat(sameLineMatch[2].replace(",", "."));
+        const name = sameLineMatch[1].replace(/^#+/, "").trim();
+        if (name.length >= 2 && price > 0 && !SKIP_KEYWORDS.some((kw) => name.toLowerCase().includes(kw))) {
+          items.push({ name, price });
+        }
+        continue;
+      }
 
-      const name = line
-        .slice(0, line.lastIndexOf(priceMatch[1]))
-        .replace(/\s*\d+\s*[xX]\s*$/, "")
-        .replace(/\s+/g, " ")
-        .trim();
-
-      if (name.length < 2) continue;
-      items.push({ name, price });
+      // Pris på neste linje: #NAVN\n42.90
+      if (i + 1 < lines.length && priceOnly.test(lines[i + 1])) {
+        const price = parseFloat(lines[i + 1].replace(",", "."));
+        const name = line.replace(/^#+/, "").trim();
+        if (name.length >= 2 && price > 0 && !SKIP_KEYWORDS.some((kw) => name.toLowerCase().includes(kw))) {
+          items.push({ name, price });
+          i++;
+        }
+      }
     }
+  }
+
+  if (items.length > 0) return items;
+
+  // Format 3: NAVN PRIS på samme linje (Kiwi, Coop og lignende)
+  for (const line of lines) {
+    const lower = line.toLowerCase();
+    if (SKIP_KEYWORDS.some((kw) => lower.includes(kw))) continue;
+
+    const priceMatch = line.match(/(-?\d+[,\.]\d{2})\s*$/);
+    if (!priceMatch) continue;
+
+    const price = parseFloat(priceMatch[1].replace(",", "."));
+    if (price <= 0) continue;
+
+    const name = line
+      .slice(0, line.lastIndexOf(priceMatch[1]))
+      .replace(/^#+/, "")
+      .replace(/\s*\d+\s*[xX]\s*$/, "")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if (name.length < 2) continue;
+    items.push({ name, price });
   }
 
   return items;
