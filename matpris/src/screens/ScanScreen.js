@@ -51,7 +51,6 @@ export default function ScanScreen({ onGoBack, totalScans, onScanComplete }) {
 
   const handleSubmit = async () => {
     setStep(3);
-    onScanComplete();
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { await fetchStoreTotals(); return; }
@@ -108,6 +107,7 @@ export default function ScanScreen({ onGoBack, totalScans, onScanComplete }) {
     }
 
     if (priceRows.length > 0) await supabase.from("prices").insert(priceRows);
+    onScanComplete();
     await fetchStoreTotals();
   };
 
