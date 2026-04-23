@@ -108,18 +108,29 @@ export default function ScanScreen({ onGoBack, totalScans, onScanComplete }) {
 
     if (priceRows.length > 0) await supabase.from("prices").insert(priceRows);
     onScanComplete();
-    await fetchStoreTotals();
+    const resolvedIds = [...new Set(priceRows.map((r) => r.product_id))];
+    await fetchStoreTotals(resolvedIds);
   };
 
-  const fetchStoreTotals = async () => {
+  const fetchStoreTotals = async (productIds = null) => {
     setLoadingComparison(true);
 
-    const { data: products, error: prodError } = await supabase
-      .from("products")
-      .select("id, name")
-      .in("name", items.map((i) => i.name));
+    let ids = productIds;
 
-    if (prodError || !products?.length) {
+    if (!ids) {
+      const { data: aliases } = await supabase
+        .from("product_aliases")
+        .select("product_id, alias");
+
+      const normalizedNames = items.map((i) => normalize(i.name));
+      ids = [...new Set(
+        (aliases ?? [])
+          .filter((a) => normalizedNames.includes(normalize(a.alias)))
+          .map((a) => a.product_id)
+      )];
+    }
+
+    if (!ids.length) {
       setLoadingComparison(false);
       return;
     }
@@ -127,7 +138,7 @@ export default function ScanScreen({ onGoBack, totalScans, onScanComplete }) {
     const { data: prices, error: priceError } = await supabase
       .from("prices")
       .select("store, price, product_id")
-      .in("product_id", products.map((p) => p.id));
+      .in("product_id", ids);
 
     if (priceError || !prices?.length) {
       setLoadingComparison(false);
