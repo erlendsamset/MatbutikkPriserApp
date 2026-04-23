@@ -8,7 +8,7 @@ import { supabase } from "../utils/supabase";
 import { runOCR } from "../utils/ocr";
 
 const normalize = (str) =>
-  str.toLowerCase().trim().replace(/[^a-zæøå0-9\s]/g, "").replace(/\s+/g, " ");
+  str.toLowerCase().replace(/[^a-zæøå0-9]/g, "");
 
 export default function ScanScreen({ onGoBack, totalScans, onScanComplete }) {
   const [step, setStep] = useState(0);
