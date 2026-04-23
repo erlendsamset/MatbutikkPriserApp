@@ -1,3 +1,14 @@
+/*
+ * StoreFilter.js — Horisontal butikkfilter
+ *
+ * En scrollbar rad med chip-knapper for å filtrere produktlisten på butikk.
+ * Første chip er alltid "Alle butikker"; deretter én chip per butikk fra constants.js.
+ *
+ * Props:
+ *   - selectedStore: nøkkelen til valgt butikk, eller "all"
+ *   - onSelectStore: funksjon som kalles med nøkkelen når brukeren trykker en chip
+ */
+
 import { ScrollView, TouchableOpacity, Text, StyleSheet } from "react-native";
 import { STORES, COLORS } from "../utils/constants";
 

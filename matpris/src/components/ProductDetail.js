@@ -1,3 +1,14 @@
+/*
+ * ProductDetail.js — Prisdetalj-modal
+ *
+ * Et bunnark (bottom sheet) som glir opp når brukeren trykker på et produktkort.
+ * Viser alle kjente priser for produktet, sortert fra billigst til dyrest,
+ * og markerer billigste butikk med en grønn badge.
+ *
+ * Merk: Modal rendres alltid i treet, men er kun synlig når visible=true.
+ * Trykk utenfor arket (på overlayet) lukker modalen.
+ */
+
 import {
   View, Text, TouchableOpacity, Modal, ScrollView, StyleSheet,
 } from "react-native";

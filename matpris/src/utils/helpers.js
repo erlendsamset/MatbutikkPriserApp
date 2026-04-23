@@ -1,3 +1,14 @@
+/*
+ * helpers.js — Hjelpefunksjoner for produktdata
+ *
+ * getCheapestStore(product): returnerer butikknøkkel og pris for billigste alternativ
+ * getFilteredProducts(...): filtrerer og sorterer produktlisten basert på søk,
+ *   valgt butikk, valgt kategori og sorteringsrekkefølge
+ * formatPrice(price): formaterer et tall til to desimaler (f.eks. 22.9 → "22.90")
+ * getStoreInfo(storeKey): slår opp visningsnavn og farger for en butikknøkkel,
+ *   med fallback hvis nøkkelen ikke finnes i STORES
+ */
+
 import { STORES } from "./constants";
 
 export function getCheapestStore(product) {

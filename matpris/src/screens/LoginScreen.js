@@ -1,3 +1,17 @@
+/*
+ * LoginScreen.js — Innlogging og registrering
+ *
+ * Vises når ingen Supabase-økt finnes (brukeren er ikke innlogget).
+ * Har to moduser som bytter med en tab-knapp: "login" og "register".
+ *
+ * Bruker Supabase Auth:
+ *   - signInWithPassword: logger inn med e-post + passord
+ *   - signUp: oppretter ny konto og sender bekreftelsesmail
+ *
+ * Når innlogging er vellykket oppdaterer Supabase Auth-lytteren i App.js
+ * automatisk session-state, og appen bytter til hovedvisningen.
+ */
+
 import { useState } from "react";
 import {
   View,

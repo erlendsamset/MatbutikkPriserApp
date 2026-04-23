@@ -1,3 +1,13 @@
+/*
+ * constants.js — Sentrale konstanter
+ *
+ * STORES: definisjon av alle støttede butikkjeder med visningsnavn og farger.
+ *   Nøklene (f.eks. "rema", "kiwi") brukes som butikk-ID i databasen.
+ *
+ * COLORS: appens fargepalett. Importeres av alle komponenter som trenger farger,
+ *   slik at designet er konsistent og enkelt å endre ett sted.
+ */
+
 export const STORES = {
   rema:       { name: "Rema 1000",  color: "#0060A9", bg: "#E8F1F8" },
   kiwi:       { name: "Kiwi",       color: "#6B9B1E", bg: "#EFF5E5" },

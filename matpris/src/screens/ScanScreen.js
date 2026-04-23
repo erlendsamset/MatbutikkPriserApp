@@ -1,3 +1,21 @@
+/*
+ * ScanScreen.js — Kvitteringsskanning (4 steg)
+ *
+ * Steg 1 — Ta bilde: åpner kamera via expo-image-picker
+ * Steg 2 — Velg butikk: brukeren velger hvilken kjede kvitteringen er fra
+ * Steg 3 — Bekreft varer: viser OCR-resultatet slik at brukeren kan se hva som ble lest
+ * Steg 4 — Ferdig: viser prissammenligning mot andre butikker
+ *
+ * OCR-flyten (handleSubmit):
+ *   1. Bildet sendes til Google Cloud Vision via ocr.js → returnerer liste med {name, price}
+ *   2. Hvert produktnavn normaliseres (lowercase, fjern tegnsetting/mellomrom)
+ *   3. Normalisert navn slås opp i "product_aliases"-tabellen i Supabase
+ *   4. Treff → bruk eksisterende product_id. Ikke treff → opprett nytt produkt + alias
+ *   5. Priser lagres i "prices"-tabellen koblet til receipt_id og product_id
+ *
+ * normalize()-funksjonen gjør at "Safari Kjeks" og "safarikjeks" matches til samme produkt.
+ */
+
 import { useState } from "react";
 import {
   View, Text, TouchableOpacity, ScrollView, Image, StyleSheet, ActivityIndicator,

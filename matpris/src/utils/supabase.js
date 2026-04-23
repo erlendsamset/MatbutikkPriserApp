@@ -1,3 +1,16 @@
+/*
+ * supabase.js — Supabase-klient
+ *
+ * Oppretter og eksporterer én delt Supabase-klient som brukes i hele appen
+ * for database-spørringer og autentisering.
+ *
+ * Konfigurasjon:
+ *   - URL og API-nøkkel hentes fra miljøvariabler (EXPO_PUBLIC_*)
+ *   - Innloggingsøkten lagres kryptert på enheten via expo-secure-store,
+ *     slik at brukeren forblir innlogget mellom app-starter
+ *   - autoRefreshToken: Supabase fornyer JWT-tokenet automatisk før det utløper
+ */
+
 import { createClient } from "@supabase/supabase-js";
 import * as SecureStore from "expo-secure-store";
 

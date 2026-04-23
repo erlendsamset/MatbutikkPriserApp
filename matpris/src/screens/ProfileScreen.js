@@ -1,3 +1,14 @@
+/*
+ * ProfileScreen.js — Brukerprofil og tilgangsstatus
+ *
+ * Viser statistikk for innlogget bruker: antall kvitteringer skannet og
+ * hvor mange dager tilgangen er aktiv.
+ *
+ * Tilgangsmodellen: brukere må skanne minst én kvittering per måned for å
+ * beholde tilgangen til appen. daysLeft og totalScans kommer som props fra App.js
+ * og er foreløpig hardkodet der — de skal senere hentes fra "users"-tabellen i Supabase.
+ */
+
 import { View, Text, ScrollView, StyleSheet } from "react-native";
 import { COLORS } from "../utils/constants";
 

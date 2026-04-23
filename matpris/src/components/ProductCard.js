@@ -1,3 +1,14 @@
+/*
+ * ProductCard.js — Produktkort i listen
+ *
+ * Viser ett produkt som et trykkbart kort i søkelisten.
+ * Innhold: produktnavn, kategori, billigste butikk og pris.
+ *
+ * Hvis brukeren har valgt en spesifikk butikk i filteret, vises
+ * den butikkens pris i stedet for billigste pris på tvers av alle butikker.
+ * Trykk på kortet åpner ProductDetail-modalen.
+ */
+
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { COLORS } from "../utils/constants";
 import { getCheapestStore, formatPrice, getStoreInfo } from "../utils/helpers";

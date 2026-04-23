@@ -1,3 +1,19 @@
+/*
+ * App.js — Hovedinngang for appen
+ *
+ * Dette er rotkomponenten som React Native starter med.
+ * Den gjør to ting:
+ *   1. Sjekker om brukeren er innlogget via Supabase Auth. Hvis ikke, vises LoginScreen.
+ *   2. Setter opp navigasjonen mellom de fire hovedskjermene (Søk, Tilbud, Skann, Profil)
+ *      som en horisontal ScrollView man sveiper mellom — én skjerm per "side".
+ *
+ * State som bor her og sendes ned til skjermene:
+ *   - session: Supabase-innloggingsøkt (null = ikke innlogget)
+ *   - daysLeft: antall dager med aktiv tilgang (fornyes ved skanning)
+ *   - totalScans: antall kvitteringer skannet denne måneden
+ *   - refreshKey: økes etter en skanning slik at HomeScreen henter nye data
+ */
+
 import { useEffect, useState, useRef } from "react";
 import { View, ScrollView, Dimensions, StyleSheet } from "react-native";
 import { StatusBar } from "expo-status-bar";

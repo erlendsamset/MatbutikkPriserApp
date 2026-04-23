@@ -1,3 +1,19 @@
+/*
+ * ocr.js — Kvitteringstolking via Google Cloud Vision
+ *
+ * runOCR(imageUri): leser bildet fra disk, sender det base64-kodet til
+ *   Google Cloud Vision API (TEXT_DETECTION), og returnerer en liste med
+ *   { name, price }-objekter.
+ *
+ * parseReceiptText(text): prøver tre ulike kvitteringsformater i prioritert rekkefølge:
+ *   Format 1 — Rema 1000: NAVN / MVA% / PRIS på tre separate linjer
+ *   Format 2 — Bunnpris: linjer som starter med #, pris på samme eller neste linje
+ *   Format 3 — Kiwi/Coop: NAVN PRIS på samme linje
+ *
+ * Filtrering: linjer som inneholder SKIP_KEYWORDS (totaler, betalingsinfo o.l.)
+ * hoppes over. Produktnavn som kun er et tall filtreres også bort.
+ */
+
 import * as FileSystem from "expo-file-system/legacy";
 
 const VISION_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_VISION_KEY;

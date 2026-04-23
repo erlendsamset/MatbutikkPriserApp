@@ -1,3 +1,15 @@
+/*
+ * TilbudScreen.js — Beste tilbud (størst prisforskjell)
+ *
+ * Henter alle priser fra Supabase og beregner for hvert produkt:
+ *   - billigste pris og hvilken butikk det er
+ *   - besparelse = dyreste pris minus billigste pris
+ *
+ * Viser topp 20 produkter sortert etter størst potensiell besparelse.
+ * Dette er nyttig for å se hvilke varer det lønner seg mest å kjøpe
+ * på riktig sted.
+ */
+
 import { useState, useEffect } from "react";
 import {
   View, Text, FlatList, StyleSheet, ActivityIndicator,

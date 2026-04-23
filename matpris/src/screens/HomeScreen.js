@@ -1,3 +1,17 @@
+/*
+ * HomeScreen.js — Søk og produktliste
+ *
+ * Henter alle produkter og priser fra Supabase og viser dem som en søkbar liste.
+ * Brukeren kan filtrere på butikk (via StoreFilter) og søke på produktnavn.
+ *
+ * Dataflyten:
+ *   - Supabase-spørring mot "prices"-tabellen, med join til "products"
+ *   - Resultatet grupperes slik at hvert produkt får én oppføring med priser per butikk
+ *   - getFilteredProducts() i helpers.js tar seg av søk, filtrering og sortering
+ *
+ * refreshKey-prop fra App.js øker etter en skanning, som trigger en ny datafetch.
+ */
+
 import { useState, useMemo, useEffect } from "react";
 import {
   View, Text, TextInput, FlatList, StyleSheet, ActivityIndicator,
