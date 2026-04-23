@@ -1,5 +1,3 @@
-// src/components/ProductCard.js
-
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { COLORS } from "../utils/constants";
 import { getCheapestStore, formatPrice, getStoreInfo } from "../utils/helpers";

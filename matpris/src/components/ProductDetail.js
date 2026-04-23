@@ -83,9 +83,7 @@ export default function ProductDetail({ product, visible, onClose }) {
             })}
           </ScrollView>
 
-          <Text style={styles.footer}>
-            Priser basert på {2 + Math.floor(Math.random() * 8)} kvitteringer siste 7 dager
-          </Text>
+
         </View>
       </TouchableOpacity>
     </Modal>
@@ -186,5 +184,5 @@ const styles = StyleSheet.create({
   priceRowRight: { alignItems: "flex-end", flexDirection: "row", gap: 6 },
   rowPrice: { fontSize: 16, fontWeight: "500", color: COLORS.text },
   priceDiff: { fontSize: 11, color: COLORS.danger },
-  footer: { fontSize: 11, color: "#B0B8A4", textAlign: "center", marginTop: 14 },
+
 });

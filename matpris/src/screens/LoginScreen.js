@@ -1,5 +1,3 @@
-// src/screens/LoginScreen.js
-
 import { useState } from "react";
 import {
   View,

@@ -1,11 +1,5 @@
 import { View, Text, ScrollView, StyleSheet } from "react-native";
-import { STORES, COLORS } from "../utils/constants";
-
-const SCAN_HISTORY = [
-  { store: "rema", date: "5. april 2026",  items: 8  },
-  { store: "kiwi", date: "28. mars 2026",  items: 12 },
-  { store: "meny", date: "15. mars 2026",  items: 5  },
-];
+import { COLORS } from "../utils/constants";
 
 export default function ProfileScreen({ daysLeft, totalScans }) {
   const accessOk = daysLeft > 7;
@@ -54,22 +48,6 @@ export default function ProfileScreen({ daysLeft, totalScans }) {
         </View>
       </View>
 
-      <Text style={styles.sectionTitle}>Siste skanninger</Text>
-      {SCAN_HISTORY.map((scan, i) => {
-        const store = STORES[scan.store];
-        return (
-          <View key={i} style={styles.historyItem}>
-            <View style={styles.historyLeft}>
-              <View style={[styles.historyDot, { backgroundColor: store?.color }]} />
-              <View>
-                <Text style={styles.historyStore}>{store?.name}</Text>
-                <Text style={styles.historyDate}>{scan.date}</Text>
-              </View>
-            </View>
-            <Text style={styles.historyCount}>{scan.items} varer</Text>
-          </View>
-        );
-      })}
     </ScrollView>
   );
 }
@@ -119,28 +97,4 @@ const styles = StyleSheet.create({
   accessText: { flex: 1 },
   accessTitle: { fontSize: 14, fontWeight: "600", color: COLORS.text },
   accessDesc: { fontSize: 12, color: "#7A8068", marginTop: 2 },
-  sectionTitle: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: COLORS.textSecondary,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginBottom: 10,
-  },
-  historyItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: COLORS.card,
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 6,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  historyLeft: { flexDirection: "row", alignItems: "center", gap: 10 },
-  historyDot: { width: 8, height: 8, borderRadius: 4 },
-  historyStore: { fontSize: 14, fontWeight: "500", color: COLORS.text },
-  historyDate: { fontSize: 11, color: COLORS.textMuted },
-  historyCount: { fontSize: 12, color: "#7A8068" },
 });

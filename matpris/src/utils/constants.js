@@ -9,14 +9,6 @@ export const STORES = {
   spar:       { name: "Spar",       color: "#007A3D", bg: "#E5F2EB" },
 };
 
-export const MOCK_RECEIPT_ITEMS = [
-  { name: "Tine Helmelk 1L",      price: 22.90 },
-  { name: "Gilde Kjøttdeig 400g", price: 49.90 },
-  { name: "Bananer 1kg",          price: 19.90 },
-  { name: "Pepsi Max 1.5L",       price: 24.90 },
-  { name: "Norvegia 500g",        price: 69.90 },
-];
-
 export const COLORS = {
   bg:            "#FAFBF7",
   card:          "#FFFFFF",

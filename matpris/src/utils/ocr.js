@@ -42,9 +42,6 @@ export async function runOCR(imageUri) {
 
   const json = await response.json();
   const rawText = json.responses?.[0]?.textAnnotations?.[0]?.description ?? "";
-  console.log("=== OCR RAW TEXT ===");
-  console.log(rawText);
-  console.log("===================");
   return parseReceiptText(rawText);
 }
 

@@ -1,5 +1,3 @@
-// App.js
-
 import { useEffect, useState, useRef } from "react";
 import { View, ScrollView, Dimensions, StyleSheet } from "react-native";
 import { StatusBar } from "expo-status-bar";
