@@ -29,7 +29,8 @@ const SKIP_KEYWORDS = [
   "kvittering", "butikk", "telefon", "org.nr", "dato", "tid",
   "kasse", "betjent", "trinn", "trekk",
   "grunnlag", "bank", "overf", "salgs", "ant. varer", "term.",
-  "bax", "godkjent", "takk for",
+  "bax", "godkjent", "takk for", "antall:", "kr/stk", "coopay", "transid",
+  "herav", "dagligvarer", "øvrige", "artikler",
 ];
 
 export async function runOCR(imageUri) {
@@ -113,6 +114,35 @@ function parseReceiptText(text) {
           i++;
         }
       }
+    }
+  }
+
+  if (items.length > 0) return items;
+
+  // Format 2b: Coop Mega — "Antall: X stk  PRIS kr/stk" gir stykpris
+  // Produktnavn er på linjen rett før (med mulig totalsum på linjen imellom)
+  const hasAntall = lines.some((l) => /antall:\s*\d+\s*stk/i.test(l));
+  if (hasAntall) {
+    for (let i = 1; i < lines.length; i++) {
+      const antallMatch = lines[i].match(/antall:\s*\d+\s*stk\s+(\d+[,\.]\d{2})\s*kr\/stk/i);
+      if (!antallMatch) continue;
+
+      const price = parseFloat(antallMatch[1].replace(",", "."));
+      if (price <= 0) continue;
+
+      // Søk bakover etter produktnavn (hopp over totalsum-linjer med mellomrom i tall)
+      let name = null;
+      for (let j = i - 1; j >= Math.max(0, i - 3); j--) {
+        const candidate = lines[j].replace(/\s+\d[\d\s]*[,\.]\d{2}\s*$/, "").trim();
+        const lower = candidate.toLowerCase();
+        if (SKIP_KEYWORDS.some((kw) => lower.includes(kw))) continue;
+        if (candidate.length < 3) continue;
+        if (NUMERIC_ONLY.test(candidate)) continue;
+        name = candidate;
+        break;
+      }
+
+      if (name) items.push({ name, price });
     }
   }
 
