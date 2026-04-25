@@ -28,6 +28,26 @@ import { runOCR } from "../utils/ocr";
 const normalize = (str) =>
   str.toLowerCase().replace(/[^a-zæøå0-9]/g, "");
 
+function levenshtein(a, b) {
+  const m = a.length, n = b.length;
+  const dp = Array.from({ length: m + 1 }, (_, i) => Array(n + 1).fill(0).map((_, j) => j === 0 ? i : 0));
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++)
+    for (let j = 1; j <= n; j++)
+      dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1] : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+  return dp[m][n];
+}
+
+function fuzzyFind(key, aliasMap) {
+  let bestId = null, bestDist = Infinity;
+  for (const [alias, id] of Object.entries(aliasMap)) {
+    const dist = levenshtein(key, alias);
+    const threshold = Math.max(2, Math.floor(Math.max(key.length, alias.length) * 0.15));
+    if (dist <= threshold && dist < bestDist) { bestDist = dist; bestId = id; }
+  }
+  return bestId;
+}
+
 export default function ScanScreen({ onGoBack, totalScans, onScanComplete }) {
   const [step, setStep] = useState(0);
   const [selectedStore, setSelectedStore] = useState(null);
@@ -101,9 +121,19 @@ export default function ScanScreen({ onGoBack, totalScans, onScanComplete }) {
 
     for (const item of items) {
       const key = normalize(item.name);
-      let productId = aliasMap[key];
+      let productId = aliasMap[key] ?? fuzzyFind(key, aliasMap);
 
-      if (!productId) {
+      if (productId) {
+        // Legg til nytt alias så neste skanning treffer eksakt
+        if (!aliasMap[key]) {
+          aliasMap[key] = productId;
+          await supabase.from("product_aliases").insert({
+            product_id: productId,
+            alias: item.name,
+            store: selectedStore,
+          });
+        }
+      } else {
         const { data: newProduct } = await supabase
           .from("products")
           .insert({ name: item.name })
