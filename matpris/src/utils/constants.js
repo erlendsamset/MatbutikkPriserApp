@@ -13,6 +13,7 @@ export const STORES = {
   kiwi:       { name: "Kiwi",       color: "#6B9B1E", bg: "#EFF5E5" },
   coop_prix:  { name: "Coop Prix",  color: "#E2001A", bg: "#FDEBEE" },
   coop_extra: { name: "Coop Extra", color: "#E2001A", bg: "#FDEBEE" },
+  coop_mega:  { name: "Coop Mega",  color: "#E2001A", bg: "#FDEBEE" },
   meny:       { name: "Meny",       color: "#C8102E", bg: "#FAE9EC" },
   bunnpris:   { name: "Bunnpris",   color: "#F7941E", bg: "#FEF3E3" },
   joker:      { name: "Joker",      color: "#1B3668", bg: "#E8ECF3" },
