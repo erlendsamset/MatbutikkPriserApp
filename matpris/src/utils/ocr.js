@@ -148,6 +148,28 @@ function parseReceiptText(text) {
 
   if (items.length > 0) return items;
 
+  // Format 2c: Coop Extra/Prix — tolinjes NAVN / PRIS, detektert via "Coopay:" i teksten
+  const isCoopReceipt = lines.some((l) => /coopay/i.test(l));
+  if (isCoopReceipt) {
+    for (let i = 0; i < lines.length - 1; i++) {
+      if (!priceOnly.test(lines[i + 1])) continue;
+
+      const name = lines[i].replace(/\s+\d[\d\s]*[,\.]\d{2}\s*$/, "").trim();
+      const lower = name.toLowerCase();
+      if (SKIP_KEYWORDS.some((kw) => lower.includes(kw))) continue;
+      if (!/[a-zæøå]/i.test(name)) continue;
+      if (name.length < 3) continue;
+
+      const price = parseFloat(lines[i + 1].replace(",", "."));
+      if (price <= 0) continue;
+
+      items.push({ name, price });
+      i++;
+    }
+  }
+
+  if (items.length > 0) return items;
+
   // Format 3: NAVN PRIS på samme linje (Kiwi, Coop og lignende)
   for (const line of lines) {
     const lower = line.toLowerCase();
