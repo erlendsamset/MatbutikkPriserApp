@@ -16,14 +16,20 @@
  * normalize()-funksjonen gjør at "Safari Kjeks" og "safarikjeks" matches til samme produkt.
  */
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
-  View, Text, TouchableOpacity, ScrollView, Image, StyleSheet, ActivityIndicator,
+  View, Text, TouchableOpacity, ScrollView, Image, StyleSheet, ActivityIndicator, Dimensions,
 } from "react-native";
-import * as ImagePicker from "expo-image-picker";
+import { CameraView, useCameraPermissions } from "expo-camera";
 import { STORES, COLORS } from "../utils/constants";
 import { supabase } from "../utils/supabase";
 import { runOCR } from "../utils/ocr";
+
+const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
+const FRAME_W = SCREEN_W * 0.82;
+const FRAME_H = FRAME_W * (5 / 3);
+const FRAME_X = (SCREEN_W - FRAME_W) / 2;
+const FRAME_Y = Math.max(70, (SCREEN_H - FRAME_H) / 2 - 30);
 
 const normalize = (str) =>
   str.toLowerCase().replace(/[^a-zæøå0-9]/g, "");
@@ -58,27 +64,24 @@ export default function ScanScreen({ onGoBack, totalScans, onScanComplete }) {
   const [loadingOCR, setLoadingOCR] = useState(false);
   const [ocrError, setOcrError] = useState(null);
 
+  const [permission, requestPermission] = useCameraPermissions();
+  const cameraRef = useRef(null);
+
   const handleTakePhoto = async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== "granted") {
-      alert("Appen trenger tilgang til kameraet.");
-      return;
-    }
-    const result = await ImagePicker.launchCameraAsync({ allowsEditing: true, quality: 0.8 });
-    if (!result.canceled) {
-      const uri = result.assets[0].uri;
+    if (!cameraRef.current) return;
+    setLoadingOCR(true);
+    try {
+      const snap = await cameraRef.current.takePictureAsync({ quality: 0.8 });
+      const uri = snap.uri;
       setPhoto(uri);
       setOcrError(null);
-      setLoadingOCR(true);
-      try {
-        const parsed = await runOCR(uri);
-        setItems(parsed);
-      } catch (e) {
-        setOcrError(`Feil: ${e.message}`);
-      } finally {
-        setLoadingOCR(false);
-      }
+      const parsed = await runOCR(uri);
+      setItems(parsed);
       setStep(1);
+    } catch (e) {
+      setOcrError(`Feil: ${e.message}`);
+    } finally {
+      setLoadingOCR(false);
     }
   };
 
@@ -222,23 +225,62 @@ export default function ScanScreen({ onGoBack, totalScans, onScanComplete }) {
   const receiptTotal = items.reduce((sum, i) => sum + i.price, 0);
 
   if (step === 0) {
-    return (
-      <View style={styles.container}>
-        <TouchableOpacity style={styles.backBtn} onPress={onGoBack}>
-          <Text style={styles.backText}>← Tilbake</Text>
-        </TouchableOpacity>
-
-        <View style={styles.cameraBox}>
-          <Text style={styles.cameraIcon}>📷</Text>
-          <Text style={styles.cameraText}>Trykk for å ta bilde</Text>
-          <Text style={styles.cameraHint}>Hold kvitteringen innenfor rammen</Text>
+    if (!permission) {
+      return <View style={styles.container} />;
+    }
+    if (!permission.granted) {
+      return (
+        <View style={styles.container}>
+          <TouchableOpacity style={styles.backBtn} onPress={onGoBack}>
+            <Text style={styles.backText}>← Tilbake</Text>
+          </TouchableOpacity>
+          <Text style={styles.stepTitle}>Kameratilgang</Text>
+          <Text style={styles.stepDesc}>Appen trenger tilgang til kameraet for å skanne kvitteringer.</Text>
+          <TouchableOpacity style={styles.captureBtn} onPress={requestPermission}>
+            <Text style={styles.captureBtnText}>Gi tilgang til kamera</Text>
+          </TouchableOpacity>
         </View>
+      );
+    }
 
-        <TouchableOpacity style={styles.captureBtn} onPress={handleTakePhoto}>
-          <Text style={styles.captureBtnText}>📸 Ta bilde av kvittering</Text>
+    return (
+      <View style={styles.cameraContainer}>
+        <CameraView ref={cameraRef} style={StyleSheet.absoluteFill} facing="back" />
+
+        <View style={[styles.overlayDark, { top: 0, height: FRAME_Y }]} />
+        <View style={[styles.overlayDark, { top: FRAME_Y + FRAME_H, bottom: 0 }]} />
+        <View style={[styles.overlayDark, { top: FRAME_Y, width: FRAME_X, height: FRAME_H }]} />
+        <View style={[styles.overlayDark, { top: FRAME_Y, left: FRAME_X + FRAME_W, right: 0, height: FRAME_H }]} />
+
+        <View style={[styles.corner, styles.cornerTL, { top: FRAME_Y, left: FRAME_X }]} />
+        <View style={[styles.corner, styles.cornerTR, { top: FRAME_Y, left: FRAME_X + FRAME_W - 28 }]} />
+        <View style={[styles.corner, styles.cornerBL, { top: FRAME_Y + FRAME_H - 28, left: FRAME_X }]} />
+        <View style={[styles.corner, styles.cornerBR, { top: FRAME_Y + FRAME_H - 28, left: FRAME_X + FRAME_W - 28 }]} />
+
+        <TouchableOpacity style={styles.cameraBackBtn} onPress={onGoBack}>
+          <Text style={styles.cameraBackText}>← Tilbake</Text>
         </TouchableOpacity>
 
-        <Text style={styles.scanCount}>
+        <Text style={[styles.frameHint, { top: FRAME_Y - 36 }]}>
+          Hold kvitteringen innenfor rammen
+        </Text>
+
+        {loadingOCR ? (
+          <ActivityIndicator
+            size="large"
+            color="#fff"
+            style={[styles.captureCircle, { top: FRAME_Y + FRAME_H + 28 }]}
+          />
+        ) : (
+          <TouchableOpacity
+            style={[styles.captureCircle, { top: FRAME_Y + FRAME_H + 20 }]}
+            onPress={handleTakePhoto}
+          >
+            <View style={styles.captureInner} />
+          </TouchableOpacity>
+        )}
+
+        <Text style={styles.scanCountOverlay}>
           Du har skannet {totalScans} kvitteringer denne måneden
         </Text>
       </View>
@@ -519,4 +561,69 @@ const styles = StyleSheet.create({
   ocrLoading: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 12 },
   ocrLoadingText: { fontSize: 13, color: COLORS.textSecondary },
   ocrError: { fontSize: 13, color: COLORS.danger, marginBottom: 12 },
+
+  cameraContainer: { flex: 1, backgroundColor: "#000" },
+  overlayDark: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    backgroundColor: "rgba(0,0,0,0.55)",
+  },
+  corner: {
+    position: "absolute",
+    width: 28,
+    height: 28,
+    borderColor: "#fff",
+    borderWidth: 3,
+  },
+  cornerTL: { borderRightWidth: 0, borderBottomWidth: 0, borderTopLeftRadius: 4 },
+  cornerTR: { borderLeftWidth: 0, borderBottomWidth: 0, borderTopRightRadius: 4 },
+  cornerBL: { borderRightWidth: 0, borderTopWidth: 0, borderBottomLeftRadius: 4 },
+  cornerBR: { borderLeftWidth: 0, borderTopWidth: 0, borderBottomRightRadius: 4 },
+  cameraBackBtn: {
+    position: "absolute",
+    top: 52,
+    left: 20,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  cameraBackText: { color: "#fff", fontSize: 15 },
+  frameHint: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    textAlign: "center",
+    color: "rgba(255,255,255,0.85)",
+    fontSize: 13,
+  },
+  captureCircle: {
+    position: "absolute",
+    alignSelf: "center",
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: "rgba(255,255,255,0.25)",
+    borderWidth: 3,
+    borderColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
+    left: (SCREEN_W - 70) / 2,
+  },
+  captureInner: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: "#fff",
+  },
+  scanCountOverlay: {
+    position: "absolute",
+    bottom: 36,
+    left: 0,
+    right: 0,
+    textAlign: "center",
+    fontSize: 12,
+    color: "rgba(255,255,255,0.55)",
+  },
 });
