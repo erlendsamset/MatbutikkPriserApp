@@ -32,7 +32,8 @@ export function getFilteredProducts({
       : Math.min(...Object.values(p.prices));
 
   return [...products]
-    .filter((p) => !q || p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q))
+    .filter((p) => p.name)
+    .filter((p) => !q || p.name.toLowerCase().includes(q) || (p.category ?? "").toLowerCase().includes(q))
     .filter((p) => selectedCategory === "all" || p.category === selectedCategory)
     .filter((p) => selectedStore === "all" || p.prices[selectedStore] !== undefined)
     .sort((a, b) => sortOrder === "low" ? getPrice(a) - getPrice(b) : getPrice(b) - getPrice(a));

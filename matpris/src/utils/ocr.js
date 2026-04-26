@@ -64,14 +64,37 @@ function parseReceiptText(text) {
   const priceOnly = /^-?\d+[,\.]\d{2}$/;
   const vatOnly = /^\d+%$/;
 
+  // Samle stykpriser fra "Antall: N stk PRIS kr/stk" — brukes som prisoverride i alle formater
+  const unitPrices = {};
+  for (let i = 1; i < lines.length; i++) {
+    const am = lines[i].match(/antall:\s*\d+\s*stk\s+(\d+[,\.]\d{2})\s*kr\/stk/i);
+    if (!am) continue;
+    const up = parseFloat(am[1].replace(",", "."));
+    if (up <= 0) continue;
+    for (let j = i - 1; j >= Math.max(0, i - 3); j--) {
+      const c = lines[j].replace(/\s+\d[\d\s]*[,\.]\d{2}\s*$/, "").trim();
+      if (!isProductName(c)) continue;
+      unitPrices[c.toLowerCase()] = up;
+      break;
+    }
+  }
+
+  const withUnitPrice = (name, fallbackPrice) =>
+    unitPrices[name.toLowerCase()] ?? fallbackPrice;
+
   // Format 1: NAME / VAT% / PRICE (Rema 1000)
+  // Sjekker også "N x kr STYKPRIS" på neste linje
+  const multiBuyLine = /(\d+)\s*[xX]\s*(?:kr\s+)?(\d+[,\.]\d{2})/i;
   for (let i = 2; i < lines.length; i++) {
     if (priceOnly.test(lines[i]) && vatOnly.test(lines[i - 1])) {
-      const price = parseFloat(lines[i].replace(",", "."));
+      let price = parseFloat(lines[i].replace(",", "."));
       if (price <= 0) continue;
       const name = lines[i - 2].replace(/^#+/, "").trim();
       if (!isProductName(name)) continue;
-      items.push({ name, price });
+      const nextLine = lines[i + 1] ?? "";
+      const unitMatch = nextLine.match(multiBuyLine);
+      if (unitMatch) price = parseFloat(unitMatch[2].replace(",", "."));
+      items.push({ name, price: withUnitPrice(name, price) });
     }
   }
 
@@ -88,7 +111,8 @@ function parseReceiptText(text) {
       if (sameLineMatch) {
         const price = parseFloat(sameLineMatch[2].replace(",", "."));
         const name = sameLineMatch[1].replace(/^#+/, "").trim();
-        if (isProductName(name) && price > 0) items.push({ name, price });
+        if (isProductName(name) && price > 0)
+          items.push({ name, price: withUnitPrice(name, price) });
         continue;
       }
 
@@ -96,7 +120,7 @@ function parseReceiptText(text) {
         const price = parseFloat(lines[i + 1].replace(",", "."));
         const name = line.replace(/^#+/, "").trim();
         if (isProductName(name) && price > 0) {
-          items.push({ name, price });
+          items.push({ name, price: withUnitPrice(name, price) });
           i++;
         }
       }
@@ -105,49 +129,31 @@ function parseReceiptText(text) {
 
   if (items.length > 0) return items;
 
-  // Format 2b: Coop Mega — "Antall: X stk  PRIS kr/stk"
-  const hasAntall = lines.some((l) => /antall:\s*\d+\s*stk/i.test(l));
-  if (hasAntall) {
-    for (let i = 1; i < lines.length; i++) {
-      const antallMatch = lines[i].match(/antall:\s*\d+\s*stk\s+(\d+[,\.]\d{2})\s*kr\/stk/i);
-      if (!antallMatch) continue;
-      const price = parseFloat(antallMatch[1].replace(",", "."));
-      if (price <= 0) continue;
-      let name = null;
-      for (let j = i - 1; j >= Math.max(0, i - 3); j--) {
-        const candidate = lines[j].replace(/\s+\d[\d\s]*[,\.]\d{2}\s*$/, "").trim();
-        if (!isProductName(candidate)) continue;
-        name = candidate;
-        break;
-      }
-      if (name) items.push({ name, price });
-    }
-  }
-
-  if (items.length > 0) return items;
-
   // Format 3: kolonneformat — OCR leser alle navn og alle priser i separate blokker
-  // Detektert ved at to eller flere prislinjer kommer etter hverandre
-  const firstConsecPrice = lines.findIndex(
-    (l, i) => priceOnly.test(l) && i + 1 < lines.length && priceOnly.test(lines[i + 1])
-  );
+  // Krever bekreftet artikkelantall fra "Totalt (X Artikler)" for å unngå falske treff
+  const artiklerLine = lines.find((l) => /\((\d+)\s*artikler\)/i.test(l));
+  if (artiklerLine) {
+    const count = parseInt(artiklerLine.match(/\((\d+)\s*artikler\)/i)[1]);
 
-  if (firstConsecPrice !== -1) {
-    const nameCandidates = lines.slice(0, firstConsecPrice).filter((l) => isProductName(l));
-    const priceBlock = lines.slice(firstConsecPrice).filter((l) => priceOnly.test(l));
+    const firstConsecPrice = lines.findIndex(
+      (l, i) => priceOnly.test(l) && i + 1 < lines.length && priceOnly.test(lines[i + 1])
+    );
 
-    const artiklerLine = lines.find((l) => /\((\d+)\s*artikler\)/i.test(l));
-    const count = artiklerLine
-      ? parseInt(artiklerLine.match(/\((\d+)\s*artikler\)/i)[1])
-      : Math.min(nameCandidates.length, priceBlock.length);
+    if (firstConsecPrice !== -1) {
+      const priceBlock = lines.slice(firstConsecPrice).filter((l) => priceOnly.test(l));
 
-    // Produktnavnene er de SISTE i listen — headere kommer øverst i OCR-output
-    const names = nameCandidates.slice(-count);
-    const prices = priceBlock.slice(0, count);
+      // Bare bruk kolonneformat hvis prisblokken faktisk inneholder nok priser
+      if (priceBlock.length >= count) {
+        const nameCandidates = lines.slice(0, firstConsecPrice).filter((l) => isProductName(l));
+        const names = nameCandidates.slice(-count);
+        const prices = priceBlock.slice(0, count);
 
-    for (let i = 0; i < Math.min(names.length, prices.length); i++) {
-      const price = parseFloat(prices[i].replace(",", "."));
-      if (price > 0) items.push({ name: names[i], price });
+        for (let i = 0; i < Math.min(names.length, prices.length); i++) {
+          const fallback = parseFloat(prices[i].replace(",", "."));
+          const price = withUnitPrice(names[i], fallback);
+          if (price > 0) items.push({ name: names[i], price });
+        }
+      }
     }
   }
 
@@ -166,7 +172,7 @@ function parseReceiptText(text) {
       .replace(/\s+/g, " ")
       .trim();
     if (!isProductName(name)) continue;
-    items.push({ name, price });
+    items.push({ name, price: withUnitPrice(name, price) });
   }
 
   if (items.length > 0) return items;
@@ -178,8 +184,15 @@ function parseReceiptText(text) {
     if (!isProductName(name)) continue;
     const price = parseFloat(lines[i + 1].replace(",", "."));
     if (price <= 0) continue;
-    items.push({ name, price });
+    items.push({ name, price: withUnitPrice(name, price) });
     i++;
+  }
+
+  if (items.length > 0) return items;
+
+  // Siste fallback: rene Antall-varer (engros-kvittering uten annet format)
+  for (const [name, price] of Object.entries(unitPrices)) {
+    items.push({ name, price });
   }
 
   return items;
