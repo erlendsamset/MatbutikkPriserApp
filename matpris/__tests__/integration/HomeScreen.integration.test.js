@@ -51,6 +51,26 @@ describe("HomeScreen (integration)", () => {
     expect(screen.getByText("Banan")).toBeTruthy();
   });
 
+  test("viser sorteringspillene og beholder resultater ved sorteringsbytte", async () => {
+    render(<HomeScreen daysLeft={5} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("2 varer funnet")).toBeTruthy();
+    });
+
+    expect(screen.getByText("Billigst")).toBeTruthy();
+    expect(screen.getByText("Dyrest")).toBeTruthy();
+    expect(screen.getByText("Flest butikker")).toBeTruthy();
+
+    fireEvent.press(screen.getByText("Flest butikker"));
+
+    await waitFor(() => {
+      expect(screen.getByText("2 varer funnet")).toBeTruthy();
+      expect(screen.getByText("Tine Helmelk 1L")).toBeTruthy();
+      expect(screen.getByText("Banan")).toBeTruthy();
+    });
+  });
+
   test("filtrerer resultat når bruker søker", async () => {
     render(<HomeScreen daysLeft={12} />);
 

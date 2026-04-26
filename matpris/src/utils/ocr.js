@@ -57,7 +57,7 @@ export async function runOCR(imageUri) {
   return parseReceiptText(rawText);
 }
 
-function parseReceiptText(text) {
+export function parseReceiptText(text) {
   const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
   const items = [];
 

@@ -71,6 +71,30 @@ describe("App auth flow (top-level)", () => {
     });
   });
 
+  test("viser login igjen etter utlogging", async () => {
+    let authCallback;
+    mockGetSession.mockResolvedValue({ data: { session: { user: { id: "u1" } } } });
+    mockOnAuthStateChange.mockImplementation((cb) => {
+      authCallback = cb;
+      return { data: { subscription: { unsubscribe: mockUnsubscribe } } };
+    });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByText("HOME_SCREEN")).toBeTruthy();
+    });
+
+    await act(async () => {
+      authCallback("SIGNED_OUT", null);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("LOGIN_SCREEN")).toBeTruthy();
+      expect(screen.queryByText("HOME_SCREEN")).toBeNull();
+    });
+  });
+
   test("går fra login til app etter auth state change", async () => {
     let authCallback;
     mockGetSession.mockResolvedValue({ data: { session: null } });

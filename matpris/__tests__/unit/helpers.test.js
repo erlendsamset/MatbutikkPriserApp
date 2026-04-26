@@ -73,4 +73,40 @@ describe("helpers (unit)", () => {
       bg: "#f0f0f0",
     });
   });
+
+  test("getStoreInfo returnerer riktig info for kjent butikk", () => {
+    const info = getStoreInfo("rema");
+    expect(info.name).toBe("Rema 1000");
+    expect(info.color).toBeTruthy();
+  });
+
+  test("getFilteredProducts sorterer etter flest butikker", () => {
+    const result = getFilteredProducts({
+      products,
+      selectedStore: "all",
+      sortOrder: "coverage",
+    });
+    expect(result[0].id).toBe("1"); // Tine Helmelk: 3 butikker
+    expect(result[result.length - 1].id).toBe("3"); // Kjøttdeig: 2 butikker
+  });
+
+  test("getFilteredProducts filtrerer ut produkter uten navn", () => {
+    const withNull = [...products, { id: "99", name: null, category: "Test", prices: { rema: 10 } }];
+    const result = getFilteredProducts({ products: withNull, selectedStore: "all", sortOrder: "low" });
+    expect(result.find((p) => p.id === "99")).toBeUndefined();
+  });
+
+  test("getFilteredProducts returnerer tom liste for tomt array", () => {
+    const result = getFilteredProducts({ products: [], selectedStore: "all", sortOrder: "low" });
+    expect(result).toHaveLength(0);
+  });
+
+  test("getCheapestStore fungerer med kun én butikk", () => {
+    const p = { id: "x", name: "Solo", prices: { meny: 55.0 } };
+    expect(getCheapestStore(p)).toEqual({ store: "meny", price: 55.0 });
+  });
+
+  test("formatPrice formatterer 0 korrekt", () => {
+    expect(formatPrice(0)).toBe("0.00");
+  });
 });

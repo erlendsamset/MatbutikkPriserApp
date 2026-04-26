@@ -273,6 +273,7 @@ export default function ScanScreen({ onGoBack, onScanComplete }) {
           />
         ) : (
           <TouchableOpacity
+            testID="capture-btn"
             style={[styles.captureCircle, { top: FRAME_Y + FRAME_H + 20 }]}
             onPress={handleTakePhoto}
           >
