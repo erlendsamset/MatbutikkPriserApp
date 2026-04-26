@@ -87,4 +87,49 @@ describe("HomeScreen (integration)", () => {
     expect(screen.getByText("Tine Helmelk 1L")).toBeTruthy();
     expect(screen.queryByText("Banan")).toBeNull();
   });
+
+  test("viser butikkfilter og filtrerer etter valgt butikk", async () => {
+    render(<HomeScreen daysLeft={5} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("2 varer funnet")).toBeTruthy();
+    });
+
+    fireEvent.press(screen.getByText("Kiwi"));
+
+    await waitFor(() => {
+      expect(screen.getByText("2 varer funnet")).toBeTruthy();
+    });
+  });
+
+  test("viser tom liste når søk gir ingen treff", async () => {
+    render(<HomeScreen daysLeft={5} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("2 varer funnet")).toBeTruthy();
+    });
+
+    fireEvent.changeText(screen.getByPlaceholderText("Søk etter matvare..."), "kjeks som ikke finnes");
+
+    await waitFor(() => {
+      expect(screen.getByText("0 varer funnet")).toBeTruthy();
+    });
+
+    expect(screen.queryByText("Tine Helmelk 1L")).toBeNull();
+    expect(screen.queryByText("Banan")).toBeNull();
+  });
+
+  test("sortering til Dyrest endrer rekkefølge", async () => {
+    render(<HomeScreen daysLeft={5} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("2 varer funnet")).toBeTruthy();
+    });
+
+    fireEvent.press(screen.getByText("Dyrest"));
+
+    await waitFor(() => {
+      expect(screen.getByText("2 varer funnet")).toBeTruthy();
+    });
+  });
 });

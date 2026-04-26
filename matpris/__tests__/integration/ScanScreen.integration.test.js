@@ -34,7 +34,6 @@ jest.mock("../../src/utils/supabase", () => ({
 describe("ScanScreen (integration)", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    // Tilbakestill til standard: kameratilgang innvilget
     require("expo-camera").useCameraPermissions.mockReturnValue([
       { granted: true },
       jest.fn(),
@@ -87,6 +86,39 @@ describe("ScanScreen (integration)", () => {
       expect(screen.getByText("Tine Helmelk 1L")).toBeTruthy();
       expect(screen.getByText("Banan")).toBeTruthy();
       expect(screen.getByText("Bekreft varer")).toBeTruthy();
+    });
+  });
+
+  test("viser hint-tekst over kamerarammen", () => {
+    render(<ScanScreen onGoBack={jest.fn()} onScanComplete={jest.fn()} />);
+    expect(screen.getByText("Hold kvitteringen innenfor rammen")).toBeTruthy();
+  });
+
+  test("viser tilbake-knapp ved steg 0", () => {
+    render(<ScanScreen onGoBack={jest.fn()} onScanComplete={jest.fn()} />);
+    expect(screen.getByText("← Tilbake")).toBeTruthy();
+  });
+
+  test("kaller onGoBack når bruker trykker tilbake-knapp", () => {
+    const onGoBack = jest.fn();
+    render(<ScanScreen onGoBack={onGoBack} onScanComplete={jest.fn()} />);
+    fireEvent.press(screen.getByText("← Tilbake"));
+    expect(onGoBack).toHaveBeenCalledTimes(1);
+  });
+
+  test("viser alle tilgjengelige butikker ved steg 1", async () => {
+    runOCR.mockResolvedValue([
+      { name: "Tine Helmelk 1L", price: 22.9 },
+    ]);
+
+    render(<ScanScreen onGoBack={jest.fn()} onScanComplete={jest.fn()} />);
+
+    fireEvent.press(screen.getByTestId("capture-btn"));
+
+    await waitFor(() => {
+      expect(screen.getByText("Rema 1000")).toBeTruthy();
+      expect(screen.getByText("Kiwi")).toBeTruthy();
+      expect(screen.getByText("Meny")).toBeTruthy();
     });
   });
 });
