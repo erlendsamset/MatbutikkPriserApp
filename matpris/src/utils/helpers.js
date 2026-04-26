@@ -36,7 +36,10 @@ export function getFilteredProducts({
     .filter((p) => !q || p.name.toLowerCase().includes(q) || (p.category ?? "").toLowerCase().includes(q))
     .filter((p) => selectedCategory === "all" || p.category === selectedCategory)
     .filter((p) => selectedStore === "all" || p.prices[selectedStore] !== undefined)
-    .sort((a, b) => sortOrder === "low" ? getPrice(a) - getPrice(b) : getPrice(b) - getPrice(a));
+    .sort((a, b) => {
+      if (sortOrder === "coverage") return Object.keys(b.prices).length - Object.keys(a.prices).length;
+      return sortOrder === "low" ? getPrice(a) - getPrice(b) : getPrice(b) - getPrice(a);
+    });
 }
 
 export const formatPrice = (price) => price.toFixed(2);

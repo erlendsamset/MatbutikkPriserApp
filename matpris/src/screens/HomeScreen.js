@@ -14,7 +14,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import {
-  View, Text, TextInput, FlatList, StyleSheet, ActivityIndicator,
+  View, Text, TextInput, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity,
 } from "react-native";
 import { COLORS } from "../utils/constants";
 import { getFilteredProducts } from "../utils/helpers";
@@ -26,6 +26,7 @@ import ProductDetail from "../components/ProductDetail";
 export default function HomeScreen({ daysLeft, refreshKey }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStore, setSelectedStore] = useState("all");
+  const [sortOrder, setSortOrder] = useState("low");
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -59,9 +60,15 @@ export default function HomeScreen({ daysLeft, refreshKey }) {
   };
 
   const filtered = useMemo(
-    () => getFilteredProducts({ products, searchQuery, selectedStore, sortOrder: "low" }),
-    [products, searchQuery, selectedStore]
+    () => getFilteredProducts({ products, searchQuery, selectedStore, sortOrder }),
+    [products, searchQuery, selectedStore, sortOrder]
   );
+
+  const SORT_OPTIONS = [
+    { key: "low",      label: "Billigst" },
+    { key: "high",     label: "Dyrest" },
+    { key: "coverage", label: "Flest butikker" },
+  ];
 
   const badgeStyle = daysLeft > 7
     ? { bg: "#EFF5E5", border: "#C8DDB3", text: "#4A7A1A" }
@@ -94,6 +101,20 @@ export default function HomeScreen({ daysLeft, refreshKey }) {
         </View>
 
         <StoreFilter selectedStore={selectedStore} onSelectStore={setSelectedStore} />
+
+        <View style={styles.sortRow}>
+          {SORT_OPTIONS.map(({ key, label }) => (
+            <TouchableOpacity
+              key={key}
+              style={[styles.sortPill, sortOrder === key && styles.sortPillActive]}
+              onPress={() => setSortOrder(key)}
+            >
+              <Text style={[styles.sortPillText, sortOrder === key && styles.sortPillTextActive]}>
+                {label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
 
         {!loading && (
           <Text style={styles.resultCount}>
@@ -164,6 +185,21 @@ const styles = StyleSheet.create({
   },
   searchIcon: { fontSize: 16, marginRight: 10 },
   searchInput: { flex: 1, paddingVertical: 14, fontSize: 15, color: COLORS.text },
+  sortRow: { flexDirection: "row", gap: 8, marginBottom: 10, marginTop: 2 },
+  sortPill: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: COLORS.card,
+    borderWidth: 1,
+    borderColor: COLORS.borderDark,
+  },
+  sortPillActive: {
+    backgroundColor: COLORS.accent,
+    borderColor: COLORS.accent,
+  },
+  sortPillText: { fontSize: 12, color: COLORS.textSecondary, fontWeight: "500" },
+  sortPillTextActive: { color: "#fff" },
   resultCount: { fontSize: 12, color: COLORS.textMuted, marginBottom: 10 },
   empty: { alignItems: "center", paddingVertical: 40 },
   emptyIcon: { fontSize: 40, marginBottom: 8 },

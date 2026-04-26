@@ -54,7 +54,7 @@ function fuzzyFind(key, aliasMap) {
   return bestId;
 }
 
-export default function ScanScreen({ onGoBack, totalScans, onScanComplete }) {
+export default function ScanScreen({ onGoBack, onScanComplete }) {
   const [step, setStep] = useState(0);
   const [selectedStore, setSelectedStore] = useState(null);
   const [items, setItems] = useState([]);
@@ -279,10 +279,6 @@ export default function ScanScreen({ onGoBack, totalScans, onScanComplete }) {
             <View style={styles.captureInner} />
           </TouchableOpacity>
         )}
-
-        <Text style={styles.scanCountOverlay}>
-          Du har skannet {totalScans} kvitteringer denne måneden
-        </Text>
       </View>
     );
   }
