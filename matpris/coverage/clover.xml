@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1777220635435" clover="3.2.0">
-  <project timestamp="1777220635435" name="All files">
-    <metrics statements="361" coveredstatements="248" conditionals="243" coveredconditionals="154" methods="81" coveredmethods="51" elements="685" coveredelements="453" complexity="0" loc="361" ncloc="361" packages="4" files="10" classes="10"/>
+<coverage generated="1777220989049" clover="3.2.0">
+  <project timestamp="1777220989049" name="All files">
+    <metrics statements="361" coveredstatements="249" conditionals="243" coveredconditionals="156" methods="81" coveredmethods="52" elements="685" coveredelements="457" complexity="0" loc="361" ncloc="361" packages="4" files="10" classes="10"/>
     <package name="matpris">
       <metrics statements="39" coveredstatements="30" conditionals="6" coveredconditionals="5" methods="11" coveredmethods="5"/>
       <file name="App.js" path="/Users/erlend_samset/Kode prosjekter-----/MatbutikkPriserApp/matpris/App.js">
@@ -48,7 +48,7 @@
       </file>
     </package>
     <package name="matpris.src.components">
-      <metrics statements="31" coveredstatements="29" conditionals="27" coveredconditionals="27" methods="12" coveredmethods="10"/>
+      <metrics statements="31" coveredstatements="30" conditionals="27" coveredconditionals="27" methods="12" coveredmethods="11"/>
       <file name="BottomNav.js" path="/Users/erlend_samset/Kode prosjekter-----/MatbutikkPriserApp/matpris/src/components/BottomNav.js">
         <metrics statements="6" coveredstatements="6" conditionals="2" coveredconditionals="2" methods="3" coveredmethods="3"/>
         <line num="15" count="2" type="stmt"/>
@@ -60,17 +60,17 @@
       </file>
       <file name="ProductCard.js" path="/Users/erlend_samset/Kode prosjekter-----/MatbutikkPriserApp/matpris/src/components/ProductCard.js">
         <metrics statements="7" coveredstatements="7" conditionals="7" coveredconditionals="7" methods="1" coveredmethods="1"/>
-        <line num="17" count="13" type="stmt"/>
-        <line num="18" count="13" type="stmt"/>
-        <line num="20" count="13" type="cond" truecount="2" falsecount="0"/>
-        <line num="23" count="13" type="stmt"/>
-        <line num="24" count="13" type="stmt"/>
-        <line num="26" count="13" type="stmt"/>
+        <line num="17" count="23" type="stmt"/>
+        <line num="18" count="23" type="stmt"/>
+        <line num="20" count="23" type="cond" truecount="2" falsecount="0"/>
+        <line num="23" count="23" type="stmt"/>
+        <line num="24" count="23" type="stmt"/>
+        <line num="26" count="23" type="stmt"/>
         <line num="61" count="2" type="stmt"/>
       </file>
       <file name="ProductDetail.js" path="/Users/erlend_samset/Kode prosjekter-----/MatbutikkPriserApp/matpris/src/components/ProductDetail.js">
         <metrics statements="11" coveredstatements="10" conditionals="14" coveredconditionals="14" methods="4" coveredmethods="3"/>
-        <line num="19" count="12" type="cond" truecount="2" falsecount="0"/>
+        <line num="19" count="21" type="cond" truecount="2" falsecount="0"/>
         <line num="21" count="4" type="stmt"/>
         <line num="22" count="4" type="stmt"/>
         <line num="23" count="8" type="stmt"/>
@@ -83,13 +83,13 @@
         <line num="104" count="2" type="stmt"/>
       </file>
       <file name="StoreFilter.js" path="/Users/erlend_samset/Kode prosjekter-----/MatbutikkPriserApp/matpris/src/components/StoreFilter.js">
-        <metrics statements="7" coveredstatements="6" conditionals="4" coveredconditionals="4" methods="4" coveredmethods="3"/>
+        <metrics statements="7" coveredstatements="7" conditionals="4" coveredconditionals="4" methods="4" coveredmethods="4"/>
         <line num="15" count="1" type="stmt"/>
         <line num="17" count="9" type="stmt"/>
-        <line num="21" count="8" type="stmt"/>
-        <line num="29" count="80" type="stmt"/>
-        <line num="30" count="80" type="stmt"/>
-        <line num="34" count="0" type="stmt"/>
+        <line num="21" count="17" type="stmt"/>
+        <line num="29" count="170" type="stmt"/>
+        <line num="30" count="170" type="stmt"/>
+        <line num="34" count="1" type="stmt"/>
         <line num="46" count="1" type="stmt"/>
       </file>
     </package>
@@ -97,38 +97,38 @@
       <metrics statements="171" coveredstatements="79" conditionals="101" coveredconditionals="33" methods="36" coveredmethods="15"/>
       <file name="HomeScreen.js" path="/Users/erlend_samset/Kode prosjekter-----/MatbutikkPriserApp/matpris/src/screens/HomeScreen.js">
         <metrics statements="35" coveredstatements="30" conditionals="18" coveredconditionals="16" methods="10" coveredmethods="8"/>
-        <line num="27" count="8" type="stmt"/>
-        <line num="28" count="8" type="stmt"/>
-        <line num="29" count="8" type="stmt"/>
-        <line num="30" count="8" type="stmt"/>
-        <line num="31" count="8" type="stmt"/>
-        <line num="32" count="8" type="stmt"/>
-        <line num="34" count="8" type="stmt"/>
-        <line num="36" count="8" type="stmt"/>
-        <line num="37" count="3" type="stmt"/>
-        <line num="38" count="3" type="stmt"/>
-        <line num="42" count="3" type="cond" truecount="1" falsecount="1"/>
+        <line num="27" count="17" type="stmt"/>
+        <line num="28" count="17" type="stmt"/>
+        <line num="29" count="17" type="stmt"/>
+        <line num="30" count="17" type="stmt"/>
+        <line num="31" count="17" type="stmt"/>
+        <line num="32" count="17" type="stmt"/>
+        <line num="34" count="17" type="stmt"/>
+        <line num="36" count="17" type="stmt"/>
+        <line num="37" count="6" type="stmt"/>
+        <line num="38" count="6" type="stmt"/>
+        <line num="42" count="6" type="cond" truecount="1" falsecount="1"/>
         <line num="43" count="0" type="stmt"/>
         <line num="44" count="0" type="stmt"/>
         <line num="45" count="0" type="stmt"/>
-        <line num="48" count="3" type="stmt"/>
-        <line num="49" count="3" type="stmt"/>
-        <line num="50" count="9" type="stmt"/>
-        <line num="51" count="9" type="cond" truecount="1" falsecount="1"/>
-        <line num="52" count="9" type="cond" truecount="2" falsecount="0"/>
-        <line num="53" count="6" type="stmt"/>
-        <line num="55" count="9" type="stmt"/>
-        <line num="58" count="3" type="stmt"/>
-        <line num="59" count="3" type="stmt"/>
-        <line num="62" count="8" type="stmt"/>
-        <line num="63" count="8" type="stmt"/>
-        <line num="67" count="8" type="stmt"/>
-        <line num="73" count="8" type="cond" truecount="2" falsecount="0"/>
-        <line num="77" count="8" type="stmt"/>
-        <line num="107" count="24" type="stmt"/>
-        <line num="110" count="1" type="stmt"/>
-        <line num="128" count="13" type="stmt"/>
-        <line num="132" count="9" type="stmt"/>
+        <line num="48" count="6" type="stmt"/>
+        <line num="49" count="6" type="stmt"/>
+        <line num="50" count="18" type="stmt"/>
+        <line num="51" count="18" type="cond" truecount="1" falsecount="1"/>
+        <line num="52" count="18" type="cond" truecount="2" falsecount="0"/>
+        <line num="53" count="12" type="stmt"/>
+        <line num="55" count="18" type="stmt"/>
+        <line num="58" count="6" type="stmt"/>
+        <line num="59" count="6" type="stmt"/>
+        <line num="62" count="17" type="stmt"/>
+        <line num="63" count="17" type="stmt"/>
+        <line num="67" count="17" type="stmt"/>
+        <line num="73" count="17" type="cond" truecount="2" falsecount="0"/>
+        <line num="77" count="17" type="stmt"/>
+        <line num="107" count="51" type="stmt"/>
+        <line num="110" count="2" type="stmt"/>
+        <line num="128" count="26" type="stmt"/>
+        <line num="132" count="19" type="stmt"/>
         <line num="135" count="0" type="stmt"/>
         <line num="156" count="0" type="stmt"/>
         <line num="162" count="1" type="stmt"/>
@@ -155,33 +155,33 @@
         <line num="51" count="0" type="stmt"/>
         <line num="52" count="0" type="cond" truecount="0" falsecount="4"/>
         <line num="54" count="0" type="stmt"/>
-        <line num="58" count="9" type="stmt"/>
-        <line num="59" count="9" type="stmt"/>
-        <line num="60" count="9" type="stmt"/>
-        <line num="61" count="9" type="stmt"/>
-        <line num="62" count="9" type="stmt"/>
-        <line num="63" count="9" type="stmt"/>
-        <line num="64" count="9" type="stmt"/>
-        <line num="65" count="9" type="stmt"/>
-        <line num="67" count="9" type="stmt"/>
-        <line num="68" count="9" type="stmt"/>
-        <line num="70" count="9" type="stmt"/>
-        <line num="71" count="2" type="cond" truecount="1" falsecount="1"/>
-        <line num="72" count="2" type="stmt"/>
-        <line num="73" count="2" type="stmt"/>
-        <line num="74" count="2" type="stmt"/>
-        <line num="75" count="2" type="stmt"/>
-        <line num="76" count="2" type="stmt"/>
-        <line num="77" count="2" type="stmt"/>
-        <line num="78" count="2" type="stmt"/>
-        <line num="79" count="2" type="stmt"/>
-        <line num="80" count="2" type="stmt"/>
+        <line num="58" count="15" type="stmt"/>
+        <line num="59" count="15" type="stmt"/>
+        <line num="60" count="15" type="stmt"/>
+        <line num="61" count="15" type="stmt"/>
+        <line num="62" count="15" type="stmt"/>
+        <line num="63" count="15" type="stmt"/>
+        <line num="64" count="15" type="stmt"/>
+        <line num="65" count="15" type="stmt"/>
+        <line num="67" count="15" type="stmt"/>
+        <line num="68" count="15" type="stmt"/>
+        <line num="70" count="15" type="stmt"/>
+        <line num="71" count="3" type="cond" truecount="1" falsecount="1"/>
+        <line num="72" count="3" type="stmt"/>
+        <line num="73" count="3" type="stmt"/>
+        <line num="74" count="3" type="stmt"/>
+        <line num="75" count="3" type="stmt"/>
+        <line num="76" count="3" type="stmt"/>
+        <line num="77" count="3" type="stmt"/>
+        <line num="78" count="3" type="stmt"/>
+        <line num="79" count="3" type="stmt"/>
+        <line num="80" count="3" type="stmt"/>
         <line num="82" count="0" type="stmt"/>
-        <line num="84" count="2" type="stmt"/>
-        <line num="88" count="9" type="stmt"/>
+        <line num="84" count="3" type="stmt"/>
+        <line num="88" count="15" type="stmt"/>
         <line num="89" count="1" type="stmt"/>
         <line num="90" count="1" type="stmt"/>
-        <line num="93" count="9" type="stmt"/>
+        <line num="93" count="15" type="stmt"/>
         <line num="94" count="0" type="stmt"/>
         <line num="96" count="0" type="stmt"/>
         <line num="97" count="0" type="cond" truecount="0" falsecount="2"/>
@@ -209,7 +209,7 @@
         <line num="161" count="0" type="stmt"/>
         <line num="162" count="0" type="stmt"/>
         <line num="163" count="0" type="stmt"/>
-        <line num="166" count="9" type="cond" truecount="0" falsecount="1"/>
+        <line num="166" count="15" type="cond" truecount="0" falsecount="1"/>
         <line num="167" count="0" type="stmt"/>
         <line num="169" count="0" type="stmt"/>
         <line num="171" count="0" type="cond" truecount="0" falsecount="2"/>
@@ -237,24 +237,24 @@
         <line num="210" count="0" type="stmt"/>
         <line num="212" count="0" type="stmt"/>
         <line num="213" count="0" type="stmt"/>
-        <line num="216" count="9" type="stmt"/>
+        <line num="216" count="15" type="stmt"/>
         <line num="217" count="0" type="stmt"/>
         <line num="218" count="0" type="stmt"/>
         <line num="219" count="0" type="stmt"/>
         <line num="220" count="0" type="stmt"/>
         <line num="221" count="0" type="stmt"/>
         <line num="222" count="0" type="stmt"/>
-        <line num="225" count="9" type="stmt"/>
-        <line num="227" count="9" type="cond" truecount="2" falsecount="0"/>
-        <line num="228" count="6" type="cond" truecount="1" falsecount="1"/>
+        <line num="225" count="15" type="stmt"/>
+        <line num="227" count="15" type="cond" truecount="2" falsecount="0"/>
+        <line num="228" count="11" type="cond" truecount="1" falsecount="1"/>
         <line num="229" count="0" type="stmt"/>
-        <line num="231" count="6" type="cond" truecount="2" falsecount="0"/>
+        <line num="231" count="11" type="cond" truecount="2" falsecount="0"/>
         <line num="232" count="1" type="stmt"/>
-        <line num="246" count="5" type="stmt"/>
-        <line num="287" count="3" type="cond" truecount="2" falsecount="0"/>
-        <line num="288" count="2" type="stmt"/>
+        <line num="246" count="10" type="stmt"/>
+        <line num="287" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="288" count="3" type="stmt"/>
         <line num="290" count="0" type="stmt"/>
-        <line num="309" count="18" type="stmt"/>
+        <line num="309" count="27" type="stmt"/>
         <line num="312" count="1" type="stmt"/>
         <line num="323" count="1" type="cond" truecount="1" falsecount="1"/>
         <line num="324" count="1" type="stmt"/>
@@ -274,29 +274,29 @@
       </file>
     </package>
     <package name="matpris.src.utils">
-      <metrics statements="120" coveredstatements="110" conditionals="109" coveredconditionals="89" methods="22" coveredmethods="21"/>
+      <metrics statements="120" coveredstatements="110" conditionals="109" coveredconditionals="91" methods="22" coveredmethods="21"/>
       <file name="constants.js" path="/Users/erlend_samset/Kode prosjekter-----/MatbutikkPriserApp/matpris/src/utils/constants.js">
         <metrics statements="2" coveredstatements="2" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
         <line num="11" count="7" type="stmt"/>
         <line num="23" count="7" type="stmt"/>
       </file>
       <file name="helpers.js" path="/Users/erlend_samset/Kode prosjekter-----/MatbutikkPriserApp/matpris/src/utils/helpers.js">
-        <metrics statements="15" coveredstatements="15" conditionals="26" coveredconditionals="19" methods="11" coveredmethods="11"/>
-        <line num="15" count="19" type="stmt"/>
-        <line num="16" count="42" type="cond" truecount="2" falsecount="0"/>
-        <line num="28" count="14" type="stmt"/>
-        <line num="29" count="14" type="stmt"/>
-        <line num="30" count="26" type="cond" truecount="1" falsecount="1"/>
-        <line num="34" count="14" type="stmt"/>
-        <line num="35" count="26" type="stmt"/>
-        <line num="36" count="25" type="cond" truecount="4" falsecount="1"/>
-        <line num="37" count="22" type="cond" truecount="2" falsecount="0"/>
-        <line num="38" count="22" type="cond" truecount="2" falsecount="0"/>
-        <line num="40" count="16" type="cond" truecount="2" falsecount="0"/>
-        <line num="41" count="13" type="cond" truecount="2" falsecount="0"/>
-        <line num="45" count="48" type="stmt"/>
+        <metrics statements="15" coveredstatements="15" conditionals="26" coveredconditionals="21" methods="11" coveredmethods="11"/>
+        <line num="15" count="29" type="stmt"/>
+        <line num="16" count="57" type="cond" truecount="2" falsecount="0"/>
+        <line num="28" count="23" type="stmt"/>
+        <line num="29" count="23" type="stmt"/>
+        <line num="30" count="36" type="cond" truecount="2" falsecount="0"/>
+        <line num="34" count="23" type="stmt"/>
+        <line num="35" count="38" type="stmt"/>
+        <line num="36" count="37" type="cond" truecount="4" falsecount="1"/>
+        <line num="37" count="32" type="cond" truecount="2" falsecount="0"/>
+        <line num="38" count="32" type="cond" truecount="2" falsecount="0"/>
+        <line num="40" count="21" type="cond" truecount="2" falsecount="0"/>
+        <line num="41" count="18" type="cond" truecount="2" falsecount="0"/>
+        <line num="45" count="62" type="stmt"/>
         <line num="47" count="4" type="stmt"/>
-        <line num="48" count="32" type="cond" truecount="2" falsecount="0"/>
+        <line num="48" count="44" type="cond" truecount="2" falsecount="0"/>
       </file>
       <file name="ocr.js" path="/Users/erlend_samset/Kode prosjekter-----/MatbutikkPriserApp/matpris/src/utils/ocr.js">
         <metrics statements="103" coveredstatements="93" conditionals="83" coveredconditionals="70" methods="11" coveredmethods="10"/>
