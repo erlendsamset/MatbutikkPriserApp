@@ -99,3 +99,10 @@ npx expo start
 ```
 
 Then scan the QR code with the [Expo Go](https://expo.dev/go) app on your phone, or press `i` for iOS simulator / `a` for Android emulator.
+
+---
+
+## Forstå kodebasen raskt
+
+- [KODEBASE_GUIDE.md](./KODEBASE_GUIDE.md) — komplett guide til arkitektur, dataflyt og filer
+- [KVELDSPLAN_KODEGJENNOMGANG.md](./KVELDSPLAN_KODEGJENNOMGANG.md) — konkret kveldsløp steg for steg
