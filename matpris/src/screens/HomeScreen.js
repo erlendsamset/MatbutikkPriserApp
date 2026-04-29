@@ -37,7 +37,7 @@ export default function HomeScreen({ daysLeft, refreshKey }) {
     setLoading(true);
     const { data, error } = await supabase
       .from("prices")
-      .select("product_id, store, price, products(id, name, category)");
+      .select("product_id, store, price, products(id, name)");
 
     if (error) {
       console.error("Feil ved henting av produkter:", error.message);
@@ -50,7 +50,7 @@ export default function HomeScreen({ daysLeft, refreshKey }) {
       const p = row.products;
       if (!p) continue;
       if (!productMap[p.id]) {
-        productMap[p.id] = { id: p.id, name: p.name, category: p.category, prices: {} };
+        productMap[p.id] = { id: p.id, name: p.name, prices: {} };
       }
       productMap[p.id].prices[row.store] = parseFloat(row.price);
     }

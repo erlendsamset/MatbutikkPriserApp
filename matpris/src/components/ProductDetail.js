@@ -30,7 +30,6 @@ export default function ProductDetail({ product, visible, onClose }) {
 
           <View style={styles.header}>
             <View style={styles.headerText}>
-              <Text style={styles.categoryLabel}>{product.category}</Text>
               <Text style={styles.productName}>{product.name}</Text>
             </View>
             <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
@@ -130,18 +129,11 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   headerText: { flex: 1, marginRight: 12 },
-  categoryLabel: {
-    fontSize: 11,
-    color: "#7A8068",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
   productName: {
     fontSize: 22,
     fontWeight: "700",
     color: COLORS.text,
     lineHeight: 28,
-    marginTop: 4,
   },
   closeBtn: {
     backgroundColor: COLORS.border,

@@ -27,7 +27,7 @@ export default function TilbudScreen() {
     setLoading(true);
     const { data, error } = await supabase
       .from("prices")
-      .select("product_id, store, price, products(id, name, category)");
+      .select("product_id, store, price, products(id, name)");
 
     if (error) {
       console.error("Feil ved henting av tilbud:", error.message);
@@ -40,7 +40,7 @@ export default function TilbudScreen() {
       const p = row.products;
       if (!p) continue;
       if (!productMap[p.id]) {
-        productMap[p.id] = { id: p.id, name: p.name, category: p.category, prices: {} };
+        productMap[p.id] = { id: p.id, name: p.name, prices: {} };
       }
       productMap[p.id].prices[row.store] = parseFloat(row.price);
     }
@@ -68,7 +68,6 @@ export default function TilbudScreen() {
         </View>
         <View style={styles.cardContent}>
           <Text style={styles.productName}>{item.name}</Text>
-          <Text style={styles.category}>{item.category}</Text>
           <View style={styles.priceRow}>
             <View style={[styles.storeBadge, { backgroundColor: store?.bg }]}>
               <View style={[styles.storeDot, { backgroundColor: store?.color }]} />
@@ -131,7 +130,6 @@ const styles = StyleSheet.create({
   rankText: { fontSize: 13, fontWeight: "700", color: COLORS.textMuted },
   cardContent: { flex: 1, gap: 4 },
   productName: { fontSize: 14, fontWeight: "600", color: COLORS.text },
-  category: { fontSize: 11, color: COLORS.textMuted },
   priceRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 2 },
   storeBadge: {
     flexDirection: "row",

@@ -32,12 +32,11 @@ describe("helpers (unit)", () => {
     expect(cheapest).toEqual({ store: "rema", price: 22.9 });
   });
 
-  test("getFilteredProducts filtrerer på søk, kategori og butikk", () => {
+  test("getFilteredProducts filtrerer på søk og butikk", () => {
     const result = getFilteredProducts({
       products,
       searchQuery: "ban",
       selectedStore: "kiwi",
-      selectedCategory: "Frukt",
       sortOrder: "low",
     });
 

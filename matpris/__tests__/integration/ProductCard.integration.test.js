@@ -9,10 +9,9 @@ const product = {
 };
 
 describe("ProductCard (integration)", () => {
-  test("viser produktnavn, kategori og billigste pris", () => {
+  test("viser produktnavn og billigste pris", () => {
     render(<ProductCard product={product} selectedStore="all" onPress={jest.fn()} />);
     expect(screen.getByText("Tine Helmelk 1L")).toBeTruthy();
-    expect(screen.getByText("Meieri")).toBeTruthy();
     expect(screen.getByText("22.90")).toBeTruthy();
   });
 

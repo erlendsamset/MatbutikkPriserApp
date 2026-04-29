@@ -2,7 +2,7 @@
  * ProductCard.js — Produktkort i listen
  *
  * Viser ett produkt som et trykkbart kort i søkelisten.
- * Innhold: produktnavn, kategori, billigste butikk og pris.
+ * Innhold: produktnavn, billigste butikk og pris.
  *
  * Hvis brukeren har valgt en spesifikk butikk i filteret, vises
  * den butikkens pris i stedet for billigste pris på tvers av alle butikker.
@@ -27,7 +27,6 @@ export default function ProductCard({ product, selectedStore, onPress }) {
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
       <View style={styles.row}>
         <View style={styles.info}>
-          <Text style={styles.category}>{product.category}</Text>
           <Text style={styles.name}>{product.name}</Text>
           <View style={styles.storeRow}>
             <View
@@ -76,18 +75,11 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 12,
   },
-  category: {
-    fontSize: 10,
-    color: COLORS.textMuted,
-    textTransform: "uppercase",
-    letterSpacing: 0.6,
-  },
   name: {
     fontSize: 15,
     fontWeight: "600",
     color: COLORS.text,
     lineHeight: 20,
-    marginTop: 2,
   },
   storeRow: {
     flexDirection: "row",

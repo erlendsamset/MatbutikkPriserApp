@@ -3,7 +3,7 @@
  *
  * getCheapestStore(product): returnerer butikknøkkel og pris for billigste alternativ
  * getFilteredProducts(...): filtrerer og sorterer produktlisten basert på søk,
- *   valgt butikk, valgt kategori og sorteringsrekkefølge
+ *   valgt butikk og sorteringsrekkefølge
  * formatPrice(price): formaterer et tall til to desimaler (f.eks. 22.9 → "22.90")
  * getStoreInfo(storeKey): slår opp visningsnavn og farger for en butikknøkkel,
  *   med fallback hvis nøkkelen ikke finnes i STORES
@@ -22,7 +22,6 @@ export function getFilteredProducts({
   products = [],
   searchQuery = "",
   selectedStore = "all",
-  selectedCategory = "all",
   sortOrder = "low",
 }) {
   const q = searchQuery.toLowerCase().trim();
@@ -33,8 +32,7 @@ export function getFilteredProducts({
 
   return [...products]
     .filter((p) => p.name)
-    .filter((p) => !q || p.name.toLowerCase().includes(q) || (p.category ?? "").toLowerCase().includes(q))
-    .filter((p) => selectedCategory === "all" || p.category === selectedCategory)
+    .filter((p) => !q || p.name.toLowerCase().includes(q))
     .filter((p) => selectedStore === "all" || p.prices[selectedStore] !== undefined)
     .sort((a, b) => {
       if (sortOrder === "coverage") return Object.keys(b.prices).length - Object.keys(a.prices).length;

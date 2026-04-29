@@ -9,10 +9,9 @@ const product = {
 };
 
 describe("ProductDetail (integration)", () => {
-  test("viser produktnavn, kategori og billigste pris", () => {
+  test("viser produktnavn og billigste pris", () => {
     render(<ProductDetail product={product} visible={true} onClose={jest.fn()} />);
     expect(screen.getByText("Tine Helmelk 1L")).toBeTruthy();
-    expect(screen.getByText("Meieri")).toBeTruthy();
     expect(screen.getByText("Billigst hos")).toBeTruthy();
     // Prisen vises både i highlight-boks og prisoversikt
     expect(screen.getAllByText("22.90 kr").length).toBeGreaterThanOrEqual(1);
