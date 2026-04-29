@@ -1,9 +1,9 @@
 /*
  * BottomNav.js — Bunnnavigasjon
  *
- * Viser fire faner nederst på skjermen: Søk, Tilbud, Skann og Profil.
+ * Viser tre faner nederst på skjermen: Søk, Skann og Profil.
  * Props:
- *   - activeScreen: nøkkelen til aktiv skjerm ("home", "deals", "scan", "profile")
+ *   - activeScreen: nøkkelen til aktiv skjerm ("home", "scan", "profile")
  *   - onNavigate: funksjon som kalles med fane-nøkkelen når brukeren trykker
  *
  * Aktiv fane markeres med accentfarge; inaktive faner er grå.
@@ -14,7 +14,6 @@ import { COLORS } from "../utils/constants";
 
 const tabs = [
   { key: "home", label: "Søk", icon: "🔍" },
-  { key: "deals", label: "Tilbud", icon: "🏷️" },
   { key: "scan", label: "Skann", icon: "📷" },
   { key: "profile", label: "Profil", icon: "👤" },
 ];

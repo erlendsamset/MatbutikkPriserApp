@@ -10,7 +10,6 @@ A crowdsourced grocery price comparison app for Norway. Users scan physical rece
 - **Receipt parsing** — handles multi-line (Rema 1000) and inline-price (Kiwi, Coop) receipt formats
 - **Price comparison** — compare prices across 8 Norwegian grocery chains in real time
 - **Store & category filtering** — horizontal scrollable filter bar
-- **Deals screen** — dedicated view for current offers
 - **Access gate** — users lose access if they don't scan within 30 days
 - **Authentication** — email/password auth via Supabase, session stored in device secure storage
 - **Row-level security** — all users can read prices; only the receipt owner can write their own data
@@ -61,7 +60,6 @@ matpris/
 ├── src/
 │   ├── screens/
 │   │   ├── HomeScreen.js     # Search, filter, product list
-│   │   ├── TilbudScreen.js   # Deals
 │   │   ├── ScanScreen.js     # 4-step receipt scan flow
 │   │   ├── ProfileScreen.js  # User profile, access status, scan history
 │   │   └── LoginScreen.js    # Auth

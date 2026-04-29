@@ -22,21 +22,11 @@ Mål: Du skal kunne forklare appens hovedflyt uten å se i koden.
 Fokuspunkter:
 - Hvordan Supabase-resultat formes til `products`.
 - Hvordan søk/filter/sortering gjøres i `getFilteredProducts`.
-- Når valgt butikk overstyrer “billigst”.
+- Når valgt butikk overstyrer "billigst".
 
 Mål: Du skal kunne følge én vare fra database-rad til UI.
 
-## Del 3 (25 min): Tilbudsstrøm
-
-1. Les `src/screens/TilbudScreen.js`
-
-Fokuspunkter:
-- Beregning av `minPrice`, `maxPrice`, `saving`.
-- Hvorfor skjermen er egen, selv om rådata er lik Home.
-
-Mål: Du skal kunne forklare hvordan “spar X kr” beregnes.
-
-## Del 4 (60 min): Skannestrøm (viktigst)
+## Del 3 (60 min): Skannestrøm (viktigst)
 
 1. Les `src/screens/ScanScreen.js`
 2. Les `src/utils/ocr.js`
@@ -54,30 +44,21 @@ Fokuspunkter:
 
 Mål: Du skal kunne tegne hele flyten fra bilde til lagret prisrad.
 
-## Del 5 (20 min): Auth + profil
+## Del 4 (20 min): Auth + profil
 
 1. Les `src/screens/LoginScreen.js`
 2. Les `src/screens/ProfileScreen.js`
-3. Les `src/utils/supabase.js`
 
-Mål: Du skal vite hvor session settes og hvor den brukes.
+Fokuspunkter:
+- Hvordan Supabase auth hooks opp.
+- Hvor `daysLeft` kommer fra og hvordan det re-synces etter scan.
 
-## Del 6 (20 min): Tester som “fasit”
+Mål: Du skal forstå auth-gaten og brukernivå-data.
 
-Les i denne rekkefølgen:
-1. `__tests__/app-flow/App.flow.test.js`
-2. `__tests__/integration/HomeScreen.integration.test.js`
-3. `__tests__/integration/ScanScreen.integration.test.js`
-4. `__tests__/unit/ocr.unit.test.js`
+## Del 5 (10 min): Navigation + utils
 
-Mål: Du skal se forventet oppførsel svart på hvitt.
+1. Les `src/components/BottomNav.js`
+2. Skim `src/utils/constants.js` (design tokens, eksempeldata)
+3. Skim `src/utils/supabase.js` (client setup)
 
-## Avslutning (10 min): Egen oppsummering
-
-Skriv korte svar på disse:
-1. Hvilken fil er mest kritisk for datakvalitet?
-2. Hvilken fil er mest kritisk for brukeropplevelse?
-3. Hvilke 2 steder ville du lagt inn logging først ved feil?
-4. Hvilken del av flyten er mest sårbar for edge cases?
-
-Hvis du kan svare tydelig på disse, har du god kontroll på kodebasen.
+Mål: Du skjønner hele systemet nå 🎉

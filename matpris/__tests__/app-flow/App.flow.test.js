@@ -32,13 +32,6 @@ jest.mock("../../src/screens/HomeScreen", () => {
   };
 });
 
-jest.mock("../../src/screens/TilbudScreen", () => {
-  const { Text } = require("react-native");
-  return function MockDealsScreen() {
-    return <Text>DEALS_SCREEN</Text>;
-  };
-});
-
 jest.mock("../../src/screens/ScanScreen", () => {
   const { Text } = require("react-native");
   return function MockScanScreen() {
@@ -116,7 +109,6 @@ describe("App auth flow (top-level)", () => {
     await waitFor(() => {
       expect(screen.queryByText("LOGIN_SCREEN")).toBeNull();
       expect(screen.getByText("HOME_SCREEN")).toBeTruthy();
-      expect(screen.getByText("DEALS_SCREEN")).toBeTruthy();
       expect(screen.getByText("SCAN_SCREEN")).toBeTruthy();
       expect(screen.getByText("PROFILE_SCREEN")).toBeTruthy();
     });

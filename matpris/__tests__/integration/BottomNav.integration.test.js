@@ -2,10 +2,9 @@ import { fireEvent, render, screen } from "@testing-library/react-native";
 import BottomNav from "../../src/components/BottomNav";
 
 describe("BottomNav (integration)", () => {
-  test("viser alle fire faner", () => {
+  test("viser alle tre faner", () => {
     render(<BottomNav activeScreen="home" onNavigate={jest.fn()} />);
     expect(screen.getByText("Søk")).toBeTruthy();
-    expect(screen.getByText("Tilbud")).toBeTruthy();
     expect(screen.getByText("Skann")).toBeTruthy();
     expect(screen.getByText("Profil")).toBeTruthy();
   });

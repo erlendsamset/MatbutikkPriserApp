@@ -4,7 +4,7 @@
  * Dette er rotkomponenten som React Native starter med.
  * Den gjør to ting:
  *   1. Sjekker om brukeren er innlogget via Supabase Auth. Hvis ikke, vises LoginScreen.
- *   2. Setter opp navigasjonen mellom de fire hovedskjermene (Søk, Tilbud, Skann, Profil)
+ *   2. Setter opp navigasjonen mellom de tre hovedskjermene (Søk, Skann, Profil)
  *      som en horisontal ScrollView man sveiper mellom — én skjerm per "side".
  *
  * State som bor her og sendes ned til skjermene:
@@ -21,13 +21,12 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import HomeScreen from "./src/screens/HomeScreen";
 import LoginScreen from "./src/screens/LoginScreen";
-import TilbudScreen from "./src/screens/TilbudScreen";
 import ScanScreen from "./src/screens/ScanScreen";
 import ProfileScreen from "./src/screens/ProfileScreen";
 import BottomNav from "./src/components/BottomNav";
 import { supabase } from "./src/utils/supabase";
 
-const SCREENS = ["home", "deals", "scan", "profile"];
+const SCREENS = ["home", "scan", "profile"];
 const { width } = Dimensions.get("window");
 
 export default function App() {
@@ -102,9 +101,6 @@ export default function App() {
         >
           <View style={styles.page}>
             <HomeScreen daysLeft={daysLeft} refreshKey={refreshKey} />
-          </View>
-          <View style={styles.page}>
-            <TilbudScreen />
           </View>
           <View style={styles.page}>
             <ScanScreen
