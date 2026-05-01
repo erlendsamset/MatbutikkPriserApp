@@ -421,11 +421,11 @@ export default function ScanScreen({ onGoBack, onScanComplete }) {
             return (
               <View
                 key={store}
-                style={[styles.comparisonRow, isCheapest && styles.comparisonRowCheapest]}
+                testID="comp-row" style={[styles.comparisonRow, isCheapest && styles.comparisonRowCheapest]}
               >
                 <View style={styles.comparisonLeft}>
                   <View style={[styles.compDot, { backgroundColor: storeInfo?.color }]} />
-                  <Text style={styles.compStoreName}>{storeInfo?.name}</Text>
+                  <Text testID="store-name" style={styles.compStoreName}>{storeInfo?.name}</Text>
                   {isScanned && <Text style={styles.compTag}>din butikk</Text>}
                   {isCheapest && (
                     <Text style={[styles.compTag, styles.compTagGreen]}>billigst</Text>
@@ -436,7 +436,7 @@ export default function ScanScreen({ onGoBack, onScanComplete }) {
                     </Text>
                   )}
                 </View>
-                <Text style={[styles.compTotal, isCheapest && styles.compTotalCheapest]}>
+                <Text testID="comp-price" style={[styles.compTotal, isCheapest && styles.compTotalCheapest]}>
                   {total.toFixed(2)} kr
                 </Text>
               </View>

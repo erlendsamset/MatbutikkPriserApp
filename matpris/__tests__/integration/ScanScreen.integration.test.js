@@ -342,3 +342,70 @@ describe("ScanScreen (integration)", () => {
     expect(onGoBack).toHaveBeenCalledTimes(1);
   });
 });
+
+  test("viser estimerte prissammenligninger når det ikke finnes data fra databasen", async () => {
+    runOCR.mockResolvedValue([
+      { name: "Helt ny vare", price: 100.0 },
+    ]);
+    mockAliasesData = [];
+    mockPricesSelectResult = { data: [], error: null };
+
+    render(<ScanScreen onGoBack={jest.fn()} onScanComplete={jest.fn()} />);
+    fireEvent.press(screen.getByTestId("capture-btn"));
+
+    await waitFor(() => screen.getByText("Rema 1000"));
+    fireEvent.press(screen.getByText("Rema 1000"));
+    await waitFor(() => screen.getByText("✓ Send inn 1 priser"));
+    fireEvent.press(screen.getByText("✓ Send inn 1 priser"));
+
+    await waitFor(() => {
+      expect(screen.getByText("Samme handletur hos andre butikker")).toBeTruthy();
+      expect(screen.getByText("billigst")).toBeTruthy();
+    });
+
+    const prices = screen.getAllByTestId("comp-price");
+    expect(prices.length).toBeGreaterThan(1);
+  });
+
+  test("sorterer prissammenligninger fra billigste til dyreste", async () => {
+    runOCR.mockResolvedValue([
+      { name: "Tine Helmelk 1L", price: 25.0 },
+      { name: "Banan", price: 20.0 },
+    ]);
+    mockAliasesData = [];
+    mockPricesSelectResult = { data: [], error: null };
+
+    render(<ScanScreen onGoBack={jest.fn()} onScanComplete={jest.fn()} />);
+    fireEvent.press(screen.getByTestId("capture-btn"));
+
+    await waitFor(() => screen.getByText("Rema 1000"));
+    fireEvent.press(screen.getByText("Rema 1000"));
+    await waitFor(() => screen.getByText("✓ Send inn 2 priser"));
+    fireEvent.press(screen.getByText("✓ Send inn 2 priser"));
+
+    await waitFor(() => {
+      const storeNames = screen.getAllByTestId("store-name");
+      expect(storeNames[0].children[0]).toBe("Bunnpris");
+    });
+  });
+
+  test("viser sparingsbeløp for hver butikk som ikke er billigst", async () => {
+    runOCR.mockResolvedValue([
+      { name: "Tine Helmelk 1L", price: 25.0 },
+    ]);
+    mockAliasesData = [];
+    mockPricesSelectResult = { data: [], error: null };
+
+    render(<ScanScreen onGoBack={jest.fn()} onScanComplete={jest.fn()} />);
+    fireEvent.press(screen.getByTestId("capture-btn"));
+
+    await waitFor(() => screen.getByText("Rema 1000"));
+    fireEvent.press(screen.getByText("Rema 1000"));
+    await waitFor(() => screen.getByText("✓ Send inn 1 priser"));
+    fireEvent.press(screen.getByText("✓ Send inn 1 priser"));
+
+    await waitFor(() => {
+      const savingsTags = screen.queryAllByText(/\+\d+\.\d+ kr/);
+      expect(savingsTags.length).toBeGreaterThan(0);
+    });
+  });

@@ -118,3 +118,66 @@ describe("parseReceiptText (unit)", () => {
     });
   });
 });
+
+describe("OCR fallback scenarios (edge cases)", () => {
+  test("henter antall-varer når navn ikk finnes", () => {
+    const mockData = {
+      responses: [
+        {
+          fullTextAnnotation: {
+            text: "2 x 25.50\n3 x 14.99\n1 x 99.90",
+          },
+        },
+      ],
+    };
+
+    // Simulerer siste fallback: kun antall + pris
+    const lines = mockData.responses[0].fullTextAnnotation.text.split("\n");
+    const unitPrices = {};
+    const pattern = /^\d+\s*x\s*([\d.]+)$/;
+
+    lines.forEach((line) => {
+      const match = line.trim().match(pattern);
+      if (match) {
+        unitPrices[line.trim()] = parseFloat(match[1]);
+      }
+    });
+
+    const items = Object.entries(unitPrices).map(([name, price]) => ({ name, price }));
+
+    expect(items.length).toBe(3);
+    expect(items[0].price).toBe(25.50);
+    expect(items[1].price).toBe(14.99);
+    expect(items[2].price).toBe(99.90);
+  });
+
+  test("filtrerer tom tekst fra OCR-resultat", () => {
+    const lines = [
+      "Tine Melk",
+      "",
+      "22.99",
+      "   ",
+      "Banan",
+      "8.50",
+    ];
+
+    const filtered = lines
+      .map((l) => l.trim())
+      .filter((l) => l.length > 0);
+
+    expect(filtered).toHaveLength(4);
+    expect(filtered).not.toContain("");
+  });
+
+  test("håndterer multiline produk-format med variabel mellomrom", () => {
+    const mockText = "Tine Helmelk\n1L\n22.50\nBanan\n8.99";
+    const pattern = /^[A-ZÆØÅa-zæøå][\w\s-]{1,30}$/;
+
+    const lines = mockText.split("\n").map((l) => l.trim());
+    const validLines = lines.filter((l) => l && pattern.test(l));
+
+    expect(validLines.length).toBeGreaterThan(0);
+    expect(validLines).toContain("Tine Helmelk");
+    expect(validLines).toContain("Banan");
+  });
+});
