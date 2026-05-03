@@ -9,14 +9,29 @@
  * og er foreløpig hardkodet der — de skal senere hentes fra "users"-tabellen i Supabase.
  */
 
-import { View, Text, ScrollView, StyleSheet } from "react-native";
+import { useState } from "react";
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
 import { COLORS } from "../utils/constants";
+import { supabase } from "../utils/supabase";
 
 export default function ProfileScreen({ daysLeft, totalScans }) {
+  const [signingOut, setSigningOut] = useState(false);
+  const [signOutError, setSignOutError] = useState(null);
   const accessOk = daysLeft > 7;
   const accessStyle = accessOk
     ? { bg: "#EFF5E5", border: "#C8DDB3" }
     : { bg: "#FEF3E3", border: "#F7C97E" };
+
+  const handleSignOut = async () => {
+    if (signingOut) return;
+    setSigningOut(true);
+    setSignOutError(null);
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      setSignOutError("Klarte ikke å logge ut. Prøv igjen.");
+    }
+    setSigningOut(false);
+  };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -58,6 +73,15 @@ export default function ProfileScreen({ daysLeft, totalScans }) {
           </Text>
         </View>
       </View>
+
+      {signOutError && <Text style={styles.signOutError}>{signOutError}</Text>}
+      <TouchableOpacity style={styles.signOutBtn} onPress={handleSignOut} disabled={signingOut}>
+        {signingOut ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.signOutBtnText}>Logg ut</Text>
+        )}
+      </TouchableOpacity>
 
     </ScrollView>
   );
@@ -108,4 +132,17 @@ const styles = StyleSheet.create({
   accessText: { flex: 1 },
   accessTitle: { fontSize: 14, fontWeight: "600", color: COLORS.text },
   accessDesc: { fontSize: 12, color: "#7A8068", marginTop: 2 },
+  signOutError: {
+    color: COLORS.danger,
+    fontSize: 12,
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  signOutBtn: {
+    backgroundColor: COLORS.accent,
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: "center",
+  },
+  signOutBtnText: { color: "#fff", fontSize: 15, fontWeight: "600" },
 });
