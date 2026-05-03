@@ -63,6 +63,8 @@ export default function ScanScreen({ onGoBack, onScanComplete }) {
   const [loadingComparison, setLoadingComparison] = useState(false);
   const [loadingOCR, setLoadingOCR] = useState(false);
   const [ocrError, setOcrError] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
 
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef(null);
@@ -91,126 +93,153 @@ export default function ScanScreen({ onGoBack, onScanComplete }) {
   };
 
   const handleSubmit = async () => {
-    setStep(3);
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { await fetchStoreTotals(); return; }
-
-    const { data: receipt, error: receiptError } = await supabase
-      .from("receipts")
-      .insert({
-        user_id: user.id,
-        chain: selectedStore,
-        scanned_at: new Date().toISOString(),
-        item_count: items.length,
-        total_amount: receiptTotal,
-        status: "processed",
-      })
-      .select()
-      .single();
-
-    if (receiptError || !receipt) { await fetchStoreTotals(); return; }
-
-    const { data: aliases } = await supabase
-      .from("product_aliases")
-      .select("product_id, alias");
-
-    const aliasMap = {};
-    for (const a of aliases ?? []) {
-      aliasMap[normalize(a.alias)] = a.product_id;
+    if (submitting) return;
+    if (!selectedStore || items.length === 0) {
+      setSubmitError("Mangler butikk eller varer å sende inn.");
+      return;
     }
 
-    const priceRows = [];
+    setSubmitting(true);
+    setSubmitError(null);
+    setStep(3);
 
-    for (const item of items) {
-      const key = normalize(item.name);
-      let productId = aliasMap[key] ?? fuzzyFind(key, aliasMap);
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError) throw new Error("Klarte ikke å hente bruker.");
+      if (!user) {
+        await fetchStoreTotals();
+        return;
+      }
 
-      if (productId) {
-        // Legg til nytt alias så neste skanning treffer eksakt
-        if (!aliasMap[key]) {
+      const { data: receipt, error: receiptError } = await supabase
+        .from("receipts")
+        .insert({
+          user_id: user.id,
+          chain: selectedStore,
+          scanned_at: new Date().toISOString(),
+          item_count: items.length,
+          total_amount: receiptTotal,
+          status: "processed",
+        })
+        .select()
+        .single();
+      if (receiptError || !receipt) throw new Error("Klarte ikke å lagre kvittering.");
+
+      const { data: aliases, error: aliasLoadError } = await supabase
+        .from("product_aliases")
+        .select("product_id, alias");
+      if (aliasLoadError) throw new Error("Klarte ikke å laste produktaliaser.");
+
+      const aliasMap = {};
+      for (const a of aliases ?? []) {
+        aliasMap[normalize(a.alias)] = a.product_id;
+      }
+
+      const priceRows = [];
+      for (const item of items) {
+        const key = normalize(item.name);
+        let productId = aliasMap[key] ?? fuzzyFind(key, aliasMap);
+
+        if (productId) {
+          if (!aliasMap[key]) {
+            aliasMap[key] = productId;
+            const { error: aliasInsertError } = await supabase.from("product_aliases").insert({
+              product_id: productId,
+              alias: item.name,
+              store: selectedStore,
+            });
+            if (aliasInsertError) throw new Error("Klarte ikke å lagre produktalias.");
+          }
+        } else {
+          const { data: newProduct, error: newProductError } = await supabase
+            .from("products")
+            .insert({ name: item.name })
+            .select()
+            .single();
+          if (newProductError || !newProduct) throw new Error("Klarte ikke å opprette produkt.");
+
+          productId = newProduct.id;
           aliasMap[key] = productId;
-          await supabase.from("product_aliases").insert({
+
+          const { error: aliasInsertError } = await supabase.from("product_aliases").insert({
             product_id: productId,
             alias: item.name,
             store: selectedStore,
           });
+          if (aliasInsertError) throw new Error("Klarte ikke å lagre produktalias.");
         }
-      } else {
-        const { data: newProduct } = await supabase
-          .from("products")
-          .insert({ name: item.name })
-          .select()
-          .single();
 
-        if (!newProduct) continue;
-        productId = newProduct.id;
-        aliasMap[key] = productId;
-
-        await supabase.from("product_aliases").insert({
-          product_id: productId,
-          alias: item.name,
-          store: selectedStore,
-        });
+        priceRows.push({ product_id: productId, store: selectedStore, price: item.price });
       }
 
-      priceRows.push({ product_id: productId, store: selectedStore, price: item.price });
-    }
+      if (priceRows.length > 0) {
+        const { error: pricesInsertError } = await supabase.from("prices").insert(priceRows);
+        if (pricesInsertError) throw new Error("Klarte ikke å lagre priser.");
+      }
 
-    if (priceRows.length > 0) await supabase.from("prices").insert(priceRows);
-    onScanComplete();
-    const resolvedIds = [...new Set(priceRows.map((r) => r.product_id))];
-    await fetchStoreTotals(resolvedIds);
+      onScanComplete();
+      const resolvedIds = [...new Set(priceRows.map((r) => r.product_id))];
+      await fetchStoreTotals(resolvedIds);
+    } catch (e) {
+      setSubmitError(e.message || "Noe gikk galt under innsending.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const fetchStoreTotals = async (productIds = null) => {
     setLoadingComparison(true);
+    try {
+      let ids = productIds;
 
-    let ids = productIds;
+      if (!ids) {
+        const { data: aliases, error: aliasesError } = await supabase
+          .from("product_aliases")
+          .select("product_id, alias");
+        if (aliasesError) throw new Error("Klarte ikke å hente aliaser for sammenligning.");
 
-    if (!ids) {
-      const { data: aliases } = await supabase
-        .from("product_aliases")
-        .select("product_id, alias");
-
-      const normalizedNames = items.map((i) => normalize(i.name));
-      ids = [...new Set(
-        (aliases ?? [])
-          .filter((a) => normalizedNames.includes(normalize(a.alias)))
-          .map((a) => a.product_id)
-      )];
-    }
-
-    let sorted = [];
-
-    if (ids && ids.length > 0) {
-      const { data: prices, error: priceError } = await supabase
-        .from("prices")
-        .select("store, price, product_id")
-        .in("product_id", ids);
-
-      if (!priceError && prices?.length > 0) {
-        const totals = {};
-        const counts = {};
-        for (const row of prices) {
-          totals[row.store] = (totals[row.store] ?? 0) + parseFloat(row.price);
-          counts[row.store] = (counts[row.store] ?? 0) + 1;
-        }
-
-        const maxCount = Math.max(...Object.values(counts));
-        sorted = Object.entries(totals)
-          .filter(([store]) => counts[store] >= maxCount * 0.6)
-          .map(([store, total]) => ({ store, total }))
-          .sort((a, b) => a.total - b.total);
+        const normalizedNames = items.map((i) => normalize(i.name));
+        ids = [...new Set(
+          (aliases ?? [])
+            .filter((a) => normalizedNames.includes(normalize(a.alias)))
+            .map((a) => a.product_id)
+        )];
       }
-    }
 
-    if (sorted.length === 0) {
-      sorted = generateEstimatedTotals();
-    }
+      let sorted = [];
+      if (ids && ids.length > 0) {
+        const { data: prices, error: priceError } = await supabase
+          .from("prices")
+          .select("store, price, product_id")
+          .in("product_id", ids);
 
-    setStoreTotals(sorted);
-    setLoadingComparison(false);
+        if (!priceError && prices?.length > 0) {
+          const totals = {};
+          const counts = {};
+          for (const row of prices) {
+            totals[row.store] = (totals[row.store] ?? 0) + parseFloat(row.price);
+            counts[row.store] = (counts[row.store] ?? 0) + 1;
+          }
+
+          const maxCount = Math.max(...Object.values(counts));
+          sorted = Object.entries(totals)
+            .filter(([store]) => counts[store] >= maxCount * 0.6)
+            .map(([store, total]) => ({ store, total }))
+            .sort((a, b) => a.total - b.total);
+        }
+      }
+
+      if (sorted.length === 0) {
+        sorted = generateEstimatedTotals();
+      }
+
+      setStoreTotals(sorted);
+    } catch (e) {
+      setSubmitError(e.message || "Klarte ikke å beregne prissammenligning.");
+      setStoreTotals(generateEstimatedTotals());
+    } finally {
+      setLoadingComparison(false);
+    }
   };
 
   const handleDone = () => {
@@ -219,6 +248,7 @@ export default function ScanScreen({ onGoBack, onScanComplete }) {
     setItems([]);
     setPhoto(null);
     setStoreTotals([]);
+    setSubmitError(null);
     onGoBack();
   };
 
@@ -370,8 +400,12 @@ export default function ScanScreen({ onGoBack, onScanComplete }) {
           <Text style={styles.totalAmount}>{receiptTotal.toFixed(2)} kr</Text>
         </View>
 
-        <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit}>
-          <Text style={styles.submitBtnText}>✓ Send inn {items.length} priser</Text>
+        <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit} disabled={submitting}>
+          {submitting ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.submitBtnText}>✓ Send inn {items.length} priser</Text>
+          )}
         </TouchableOpacity>
       </ScrollView>
     );
@@ -392,6 +426,7 @@ export default function ScanScreen({ onGoBack, onScanComplete }) {
       <Text style={styles.successText}>
         {items.length} priser lagt til fra {scannedStoreInfo?.name}
       </Text>
+      {submitError && <Text style={styles.ocrError}>{submitError}</Text>}
 
       <View style={styles.totalCard}>
         <Text style={styles.totalCardLabel}>Du betalte</Text>
