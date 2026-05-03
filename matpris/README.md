@@ -104,3 +104,4 @@ Then scan the QR code with the [Expo Go](https://expo.dev/go) app on your phone,
 
 - [KODEBASE_GUIDE.md](./docs/KODEBASE_GUIDE.md) — komplett guide til arkitektur, dataflyt og filer
 - [KVELDSPLAN_KODEGJENNOMGANG.md](./docs/KVELDSPLAN_KODEGJENNOMGANG.md) — konkret kveldsløp steg for steg
+- [RLS-verifisering](./docs/RLS_VERIFISERING.md) — tilgangssikkerhet før launch
