@@ -21,6 +21,7 @@ import {
   View, Text, TouchableOpacity, ScrollView, Image, StyleSheet, ActivityIndicator, Dimensions,
 } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
+import * as ImagePicker from "expo-image-picker";
 import { STORES, COLORS } from "../utils/constants";
 import { supabase } from "../utils/supabase";
 import { runOCR } from "../utils/ocr";
@@ -90,6 +91,29 @@ export default function ScanScreen({ onGoBack, onScanComplete }) {
   const handleSelectStore = (storeKey) => {
     setSelectedStore(storeKey);
     setStep(2);
+  };
+
+  const handlePickFromGallery = async () => {
+    setLoadingOCR(true);
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 0.8,
+      });
+
+      if (result.canceled || !result.assets?.length) return;
+
+      const uri = result.assets[0].uri;
+      setPhoto(uri);
+      setOcrError(null);
+      const parsed = await runOCR(uri);
+      setItems(parsed);
+      setStep(1);
+    } catch (e) {
+      setOcrError(`Feil: ${e.message}`);
+    } finally {
+      setLoadingOCR(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -321,13 +345,23 @@ export default function ScanScreen({ onGoBack, onScanComplete }) {
             style={[styles.captureCircle, { top: FRAME_Y + FRAME_H + 28 }]}
           />
         ) : (
-          <TouchableOpacity
-            testID="capture-btn"
-            style={[styles.captureCircle, { top: FRAME_Y + FRAME_H + 20 }]}
-            onPress={handleTakePhoto}
-          >
-            <View style={styles.captureInner} />
-          </TouchableOpacity>
+          <>
+            <TouchableOpacity
+              testID="gallery-btn"
+              style={[styles.galleryBtn, { top: FRAME_Y + FRAME_H + 32 }]}
+              onPress={handlePickFromGallery}
+            >
+              <Text style={styles.galleryBtnText}>Galleri</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              testID="capture-btn"
+              style={[styles.captureCircle, { top: FRAME_Y + FRAME_H + 20 }]}
+              onPress={handleTakePhoto}
+            >
+              <View style={styles.captureInner} />
+            </TouchableOpacity>
+          </>
         )}
       </View>
     );
@@ -647,6 +681,17 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   cameraBackText: { color: "#fff", fontSize: 15 },
+  galleryBtn: {
+    position: "absolute",
+    left: 20,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.3)",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+  },
+  galleryBtnText: { color: "#fff", fontSize: 13, fontWeight: "600" },
   frameHint: {
     position: "absolute",
     left: 0,

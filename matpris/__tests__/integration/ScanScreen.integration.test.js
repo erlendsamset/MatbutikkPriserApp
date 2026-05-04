@@ -2,6 +2,7 @@ import React from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
 import ScanScreen from "../../src/screens/ScanScreen";
 import { runOCR } from "../../src/utils/ocr";
+import * as ImagePicker from "expo-image-picker";
 
 const mockGetUser = jest.fn();
 const mockFrom = jest.fn();
@@ -97,6 +98,11 @@ jest.mock("../../src/utils/ocr", () => ({
   runOCR: jest.fn(),
 }));
 
+jest.mock("expo-image-picker", () => ({
+  MediaTypeOptions: { Images: "Images" },
+  launchImageLibraryAsync: jest.fn(),
+}));
+
 jest.mock("../../src/utils/supabase", () => ({
   supabase: {
     auth: { getUser: (...args) => mockGetUser(...args) },
@@ -157,6 +163,22 @@ describe("ScanScreen (integration)", () => {
     fireEvent.press(screen.getByTestId("capture-btn"));
 
     await waitFor(() => {
+      expect(screen.getByText("Hvilken butikk?")).toBeTruthy();
+    });
+  });
+
+  test("går til butikkvalg etter valg fra galleri", async () => {
+    ImagePicker.launchImageLibraryAsync.mockResolvedValue({
+      canceled: false,
+      assets: [{ uri: "file://gallery.jpg" }],
+    });
+    runOCR.mockResolvedValue([{ name: "Pepsi Max", price: 32.5 }]);
+
+    render(<ScanScreen onGoBack={jest.fn()} onScanComplete={jest.fn()} />);
+    fireEvent.press(screen.getByTestId("gallery-btn"));
+
+    await waitFor(() => {
+      expect(runOCR).toHaveBeenCalledWith("file://gallery.jpg");
       expect(screen.getByText("Hvilken butikk?")).toBeTruthy();
     });
   });
