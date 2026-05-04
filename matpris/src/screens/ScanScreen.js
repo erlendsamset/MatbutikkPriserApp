@@ -79,6 +79,10 @@ export default function ScanScreen({ onGoBack, onScanComplete }) {
       setPhoto(uri);
       setOcrError(null);
       const parsed = await runOCR(uri);
+      if (!parsed?.length) {
+        setOcrError("Fant ingen varer i bildet. Prøv et tydeligere bilde eller et annet utsnitt.");
+        return;
+      }
       setItems(parsed);
       setStep(1);
     } catch (e) {
@@ -107,6 +111,10 @@ export default function ScanScreen({ onGoBack, onScanComplete }) {
       setPhoto(uri);
       setOcrError(null);
       const parsed = await runOCR(uri);
+      if (!parsed?.length) {
+        setOcrError("Fant ingen varer i bildet. Prøv et tydeligere bilde eller et annet utsnitt.");
+        return;
+      }
       setItems(parsed);
       setStep(1);
     } catch (e) {

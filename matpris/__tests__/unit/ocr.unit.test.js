@@ -83,6 +83,20 @@ describe("parseReceiptText (unit)", () => {
         { name: "Norvegia Skivet 400g", price: 59.9 },
       ]);
     });
+
+    test("plukker opp produkt med kr-suffiks", () => {
+      const text = "Laks Fersk 119,90 kr";
+      expect(parseReceiptText(text)).toEqual([
+        { name: "Laks Fersk", price: 119.9 },
+      ]);
+    });
+
+    test("plukker opp produkt med OCR-vennlig heltallspris (1290 -> 12,90)", () => {
+      const text = "Eplejuice 1L 1290";
+      expect(parseReceiptText(text)).toEqual([
+        { name: "Eplejuice 1L", price: 12.9 },
+      ]);
+    });
   });
 
   describe("Format 5 — Tolinjes fallback (Navn / Pris)", () => {
@@ -90,6 +104,13 @@ describe("parseReceiptText (unit)", () => {
       const text = "Lettmelk 1L\n19,90";
       expect(parseReceiptText(text)).toEqual([
         { name: "Lettmelk 1L", price: 19.9 },
+      ]);
+    });
+
+    test("plukker opp pris med mellomrom og kr", () => {
+      const text = "Bringebær\n12 90 kr";
+      expect(parseReceiptText(text)).toEqual([
+        { name: "Bringebær", price: 12.9 },
       ]);
     });
   });
