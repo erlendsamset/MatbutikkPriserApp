@@ -114,6 +114,27 @@ Ikke koblet til ennå — appen bruker SAMPLE_DATA i constants.js.
 5. Eksempeldata ligger i constants.js — når Supabase kobles til, erstattes disse med ekte API-kall
 6. Appen skal fungere offline med cached data (implementeres senere)
 
+## 95% Confidence Requirement (Before Code Changes)
+Before making **any code changes** (.js file edits), I must reach 95% confidence. This means:
+
+**Confidence is reduced by:**
+- Unclear or ambiguous requirements (missing context from you)
+- Uncertainty about codebase patterns or architecture (haven't verified similar implementations)
+- High-risk or high-impact changes without clear justification
+
+**If confidence is below 95%, I will:**
+- Ask clarifying questions until I understand the requirement fully
+- Verify existing patterns in the codebase
+- Confirm the scope and impact of the change
+- Not proceed with code until I can confidently explain the "why"
+
+**Examples of questions I'll ask:**
+- "Can you clarify what you mean by...?"
+- "Is this change additive, or should it replace existing code?"
+- "What edge cases should I handle?"
+- "How does this fit with the existing architecture in [file]?"
+- "What's the user-facing impact of this change?"
+
 ## Neste prioriterte oppgaver (i rekkefølge)
 1. Sett opp Supabase-tilkobling (supabase client, auth)
 2. Erstatt eksempeldata med ekte database-kall
