@@ -2,13 +2,13 @@
 
 **Date:** 2026-05-05  
 **Target:** iOS App Store publication with core scanning + OCR feature  
-**Scope:** Anonymous scanning workflow with real data in Supabase
+**Scope:** Browse-anonymous, scan-authenticated workflow with real data in Supabase
 
 ---
 
 ## Overview
 
-Launch a minimal version of Matpris with the core user value: users can scan receipts, extract prices via Google Cloud Vision OCR, and contribute real price data. No authentication required. Data is immediately available to all users via anonymous device IDs.
+Launch a minimal version of Matpris with the core user value: users can browse products and prices without logging in, but must authenticate to submit scan data. Uses existing LoginScreen and Supabase auth infrastructure.
 
 **Key constraint:** Minimal schema, maximum focus on making scanning work reliably.
 
@@ -17,21 +17,26 @@ Launch a minimal version of Matpris with the core user value: users can scan rec
 ## User Flow
 
 ```
-Anonymous User
-  ↓ Opens App
+Open App
+  ↓ HomeScreen (no login required)
   ↓ Browse Products / Prices (read-only, from Supabase)
   ↓ Tap "Scan Receipt"
+  ↓ [If not logged in] → LoginScreen (sign up / log in)
   ↓ Take Photo (camera)
   ↓ Upload to Supabase Storage
   ↓ Send to Google Cloud Vision API
   ↓ Review OCR Results (user corrects/deletes items)
   ↓ Match text to Products table (fuzzy match)
-  ↓ Confirm & Save as Prices
+  ↓ Select Store → Confirm & Save as Prices
   ↓ Receipt marked 'processed'
   ↓ HomeScreen refreshes, new prices visible
 ```
 
-User never creates account. Each device has a unique `deviceId` (UUID, stored locally in secure storage).
+**Login behavior:**
+- HomeScreen is always accessible without login
+- Tapping "Scan Receipt" checks if user is authenticated
+- If no session, redirect to LoginScreen
+- After successful login, return to ScanScreen to complete scan
 
 ---
 
@@ -53,7 +58,7 @@ Pre-populated by team. One record per unique grocery item.
 **Constraints:** Unique (name, brand, weight_volume). At least 100-200 products seeded before launch.
 
 ### Table: `prices`
-Populated by users scanning receipts. One record per item per receipt.
+Populated by authenticated users scanning receipts. One record per item per receipt.
 
 | Column | Type | Notes |
 |--------|------|-------|
@@ -63,7 +68,7 @@ Populated by users scanning receipts. One record per item per receipt.
 | price | numeric | NOK (e.g., 29.90) |
 | quantity | integer | e.g., 1, 6 (for multi-packs) |
 | receipt_date | date | When item was purchased |
-| device_id | uuid | Device that submitted this price |
+| user_id | uuid | Foreign key to auth.users (who submitted this price) |
 | scanned_at | timestamp | When it was scanned |
 | created_at | timestamp | |
 
@@ -75,22 +80,22 @@ Tracks metadata for each scan event.
 | Column | Type | Notes |
 |--------|------|-------|
 | id | uuid | Primary key |
-| device_id | uuid | Device that submitted |
+| user_id | uuid | Foreign key to auth.users (who submitted) |
 | store_chain | text | e.g. "rema", "kiwi" |
-| image_url | text | Path in Supabase Storage, e.g. `receipts/device-uuid/timestamp.jpg` |
+| image_url | text | Path in Supabase Storage, e.g. `receipts/{user_id}/{timestamp}.jpg` |
 | ocr_raw_text | text | Raw output from Google Cloud Vision |
 | item_count | integer | Number of items extracted by OCR |
 | status | enum | 'pending' or 'processed' |
 | scanned_at | timestamp | |
 | created_at | timestamp | |
 
-**Constraints:** Index on (device_id, scanned_at) for quick history lookups.
+**Constraints:** Index on (user_id, scanned_at) for quick history lookups.
 
 ### Row-Level Security (RLS)
 
 - **products:** Public read, no writes (only team can insert).
-- **prices:** Public read, anyone can insert (no auth check — device_id is sufficient).
-- **receipts:** Public read, anyone can insert.
+- **prices:** Public read, authenticated users can insert (user_id auto-set from session).
+- **receipts:** Public read, authenticated users can insert (user_id auto-set from session).
 
 ---
 
@@ -124,37 +129,27 @@ Tracks metadata for each scan event.
 - If no match found, allow user to skip or search manually
 - Build final list: [product_id, store_chain, price, quantity]
 
-### 5. Save Prices
+### 5. Save Prices (Authenticated)
+- Check if user is logged in (should be, since we redirected to LoginScreen earlier)
+- Get `user.id` from Supabase session
 - User enters store chain (dropdown from STORES in constants.js)
 - User reviews prices/items one more time
-- Tap "Submit" → insert records into `prices` and `receipts` tables
+- Tap "Submit" → insert records into `prices` and `receipts` tables with `user_id`
 - Receipt marked status='processed'
 - Local state cleared, return to HomeScreen
 - HomeScreen fetches latest prices and refreshes (via refetch or real-time listener)
 
 ---
 
-## Device Identification
+## Authentication
 
-**Device ID Setup (on first app launch):**
-```javascript
-// In App.js or a utils/device.js
-import * as SecureStore from 'expo-secure-store';
-
-async function getOrCreateDeviceId() {
-  let deviceId = await SecureStore.getItemAsync('deviceId');
-  if (!deviceId) {
-    deviceId = UUID.v4();
-    await SecureStore.setItemAsync('deviceId', deviceId);
-  }
-  return deviceId;
-}
-```
-
-- Stored in Expo SecureStore (native encrypted storage)
-- Retrieved once on app startup
-- Passed with every insert to `prices` and `receipts`
-- No personal data attached; device is anonymous
+**Session Management (existing LoginScreen + Supabase Auth):**
+- User can browse without login (HomeScreen loads public price data)
+- Tapping "Scan Receipt" checks `supabase.auth.getSession()`
+- If no session, redirect to LoginScreen (email/password sign up or login)
+- After successful auth, Supabase stores session token in SecureStore
+- Session persists across app launches
+- `user.id` is automatically included in all inserts to `prices` and `receipts` via RLS
 
 ---
 
@@ -179,13 +174,14 @@ Products and prices are publicly readable. HomeScreen queries latest prices, gro
 
 ## What's NOT Included (Post-Launch)
 
-- User accounts / authentication
-- User profiles / scan history per user
-- Price history graphs
+- User profiles (name, preferences, verification badges)
+- Scan history dashboard (persisted for user, visible in app)
+- Price history graphs (price trends over time per product)
 - Shopping lists
 - Push notifications
-- Advanced filtering (price trends, etc.)
+- Advanced filtering (price trends, historical comparisons, etc.)
 - Offline mode / local caching
+- Moderator tools (flagging bad data, user bans)
 
 These are good Phase 2 features after launch validates the core scanning loop.
 
@@ -196,36 +192,38 @@ These are good Phase 2 features after launch validates the core scanning loop.
 1. **Supabase Setup** (1–2 days)
    - Create tables (products, prices, receipts)
    - Seed products table (200+ items)
-   - Set up RLS policies
+   - Set up RLS policies (with user_id authentication checks)
    - Create Supabase Storage bucket for receipts
 
-2. **Device ID & Auth Context** (0.5 day)
-   - Implement device ID retrieval + storage
-   - Create app-level context for deviceId
-   - Make available to all screens
+2. **HomeScreen Data Integration** (1–2 days)
+   - Replace SAMPLE_DATA queries with real Supabase queries
+   - Public read access (no login required)
+   - Test filtering, sorting, product detail
+   - Test performance and load time
 
-3. **Google Cloud Vision Integration** (1–2 days)
-   - Set up API key (already have one)
-   - Implement OCR call from ScanScreen
-   - Test with sample receipts
+3. **ScanScreen Auth Guard** (0.5 day)
+   - Check session before allowing scan
+   - Redirect to LoginScreen if not authenticated
+   - Return to ScanScreen after successful login
 
 4. **Scanning Flow Implementation** (3–4 days)
    - Wire photo upload to Supabase Storage
-   - Display OCR results with edit UI
+   - Display OCR results with edit UI (already coded)
    - Implement product fuzzy-matching
    - Build price entry & confirmation step
-   - Insert prices/receipts into Supabase
+   - Insert prices/receipts with user_id into Supabase
 
-5. **HomeScreen Data Integration** (1–2 days)
-   - Replace SAMPLE_DATA queries with Supabase queries
-   - Test real-time updates (if using listeners)
-   - Test filtering, sorting, product detail
+5. **Image Upload & Storage** (1 day)
+   - Configure Supabase Storage bucket permissions
+   - Compress images before upload
+   - Handle upload errors + retries
 
 6. **Testing & Polish** (1–2 days)
-   - End-to-end scan flow testing
-   - Edge cases (no matches, failed OCR, upload errors)
+   - End-to-end scan flow (login → scan → upload → see data)
+   - Edge cases (no matches, failed OCR, upload errors, network failures)
    - Error messages + fallbacks
    - Performance (image upload size, OCR latency)
+   - Test with real receipts from different stores
 
 **Estimated total:** ~8–12 days of focused work
 
@@ -235,12 +233,12 @@ These are good Phase 2 features after launch validates the core scanning loop.
 
 | Decision | Rationale |
 |----------|-----------|
-| No user auth for MVP | Simpler launch; device ID is enough to attribute prices |
-| Device ID in SecureStore | Persists across app launches; can't be easily changed by user |
-| Google Cloud Vision direct call | Faster MVP; can refactor to Edge Function later |
+| Browse anonymous, scan authenticated | Balances openness (anyone can see prices) with data quality (scans are attributed) |
+| Keep existing LoginScreen | Reuses investment already made; email/password auth is simple and familiar |
+| Google Cloud Vision direct call | Faster MVP; can refactor to Edge Function later for better security |
 | Pre-populated products table | Avoids needing a product search/creation UX; focus on scanning |
 | Manual correction step before save | Reduces bad data; user has last-mile validation |
-| Public RLS on all tables | Everyone can see prices (core value); no auth overhead |
+| Public RLS on products; auth-only on prices/receipts | Everyone can see prices (core value); submissions require user attribution |
 
 ---
 
