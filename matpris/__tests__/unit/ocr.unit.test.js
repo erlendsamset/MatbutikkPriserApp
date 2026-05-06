@@ -21,6 +21,13 @@ describe("parseReceiptText (unit)", () => {
       const result = parseReceiptText(text);
       expect(result.find((i) => i.price < 0)).toBeUndefined();
     });
+
+    test("plukker opp Kiwi-linje med MVA på samme linje som varen", () => {
+      const text = "NORVEGIA 26% SK.FRI 500 15%\n78,90";
+      expect(parseReceiptText(text)).toEqual([
+        { name: "NORVEGIA 26% SK.FRI 500", price: 78.9 },
+      ]);
+    });
   });
 
   describe("Format 2 — Bunnpris (#-prefix)", () => {

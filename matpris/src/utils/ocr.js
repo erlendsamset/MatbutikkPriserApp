@@ -130,20 +130,31 @@ export function parseReceiptText(text) {
   const withUnitPrice = (name, fallbackPrice) =>
     unitPrices[name.toLowerCase()] ?? fallbackPrice;
 
-  // Format 1: NAME / VAT% / PRICE (Rema 1000)
+  // Format 1: NAME / VAT% / PRICE (Rema 1000/Kiwi)
+  // Håndterer også "NAME VAT%" / PRICE når OCR legger MVA på varelinjen.
   // Sjekker også "N x kr STYKPRIS" på neste linje
   const multiBuyLine = /(\d+)\s*[xX]\s*(?:kr\s+)?(\d+[,\.]\d{2})/i;
-  for (let i = 2; i < lines.length; i++) {
-    if (priceOnly(lines[i]) && vatOnly.test(lines[i - 1])) {
-      let price = extractTrailingPrice(lines[i]);
-      if (price <= 0) continue;
-      const name = lines[i - 2].replace(/^#+/, "").trim();
-      if (!isProductName(name)) continue;
-      const nextLine = lines[i + 1] ?? "";
-      const unitMatch = nextLine.match(multiBuyLine);
-      if (unitMatch) price = parsePriceToken(unitMatch[2]);
-      items.push({ name, price: withUnitPrice(name, price) });
+  const inlineVatLine = /^(.+?)\s+\d+%$/;
+  for (let i = 1; i < lines.length; i++) {
+    if (!priceOnly(lines[i])) continue;
+
+    let name = null;
+    if (i >= 2 && vatOnly.test(lines[i - 1])) {
+      name = lines[i - 2].replace(/^#+/, "").trim();
+    } else {
+      const inlineVatMatch = lines[i - 1].match(inlineVatLine);
+      if (inlineVatMatch) {
+        name = inlineVatMatch[1].replace(/^#+/, "").trim();
+      }
     }
+
+    if (!name || !isProductName(name)) continue;
+    let price = extractTrailingPrice(lines[i]);
+    if (price <= 0) continue;
+    const nextLine = lines[i + 1] ?? "";
+    const unitMatch = nextLine.match(multiBuyLine);
+    if (unitMatch) price = parsePriceToken(unitMatch[2]);
+    items.push({ name, price: withUnitPrice(name, price) });
   }
 
   if (items.length > 0) return items;
