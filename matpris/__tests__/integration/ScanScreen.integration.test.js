@@ -99,8 +99,12 @@ jest.mock("../../src/utils/ocr", () => ({
 }));
 
 jest.mock("expo-image-picker", () => ({
-  MediaTypeOptions: { Images: "Images" },
   launchImageLibraryAsync: jest.fn(),
+}));
+
+jest.mock("expo-image-manipulator", () => ({
+  SaveFormat: { JPEG: "jpeg" },
+  manipulateAsync: jest.fn((uri) => Promise.resolve({ uri: `${uri}.jpg` })),
 }));
 
 jest.mock("../../src/utils/supabase", () => ({
@@ -178,7 +182,7 @@ describe("ScanScreen (integration)", () => {
     fireEvent.press(screen.getByTestId("gallery-btn"));
 
     await waitFor(() => {
-      expect(runOCR).toHaveBeenCalledWith("file://gallery.jpg");
+      expect(runOCR).toHaveBeenCalledWith("file://gallery.jpg.jpg");
       expect(screen.getByText("Hvilken butikk?")).toBeTruthy();
     });
   });

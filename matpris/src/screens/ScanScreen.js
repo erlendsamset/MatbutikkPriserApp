@@ -22,6 +22,7 @@ import {
 } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
+import * as ImageManipulator from "expo-image-manipulator";
 import { STORES, COLORS } from "../utils/constants";
 import { supabase } from "../utils/supabase";
 import { runOCR } from "../utils/ocr";
@@ -67,6 +68,23 @@ function throwSupabaseError(userMessage, supabaseError) {
   throw new Error(userMessage);
 }
 
+async function prepareImageForOCR(uri) {
+  const result = await ImageManipulator.manipulateAsync(
+    uri,
+    [],
+    {
+      compress: 0.9,
+      format: ImageManipulator.SaveFormat.JPEG,
+    }
+  );
+
+  if (__DEV__ && result.uri !== uri) {
+    console.log("[scan:image-prepared]", { originalUri: uri, ocrUri: result.uri });
+  }
+
+  return result.uri;
+}
+
 export default function ScanScreen({ onGoBack, onScanComplete }) {
   const [step, setStep] = useState(0);
   const [selectedStore, setSelectedStore] = useState(null);
@@ -88,9 +106,10 @@ export default function ScanScreen({ onGoBack, onScanComplete }) {
     try {
       const snap = await cameraRef.current.takePictureAsync({ quality: 0.8 });
       const uri = snap.uri;
+      const ocrUri = await prepareImageForOCR(uri);
       setPhoto(uri);
       setOcrError(null);
-      const parsed = await runOCR(uri);
+      const parsed = await runOCR(ocrUri);
       if (!parsed?.length) {
         setOcrError("Fant ingen varer i bildet. Prøv et tydeligere bilde eller et annet utsnitt.");
         return;
@@ -113,16 +132,17 @@ export default function ScanScreen({ onGoBack, onScanComplete }) {
     setLoadingOCR(true);
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaType?.Images ? [ImagePicker.MediaType.Images] : ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ["images"],
         quality: 0.8,
       });
 
       if (result.canceled || !result.assets?.length) return;
 
       const uri = result.assets[0].uri;
+      const ocrUri = await prepareImageForOCR(uri);
       setPhoto(uri);
       setOcrError(null);
-      const parsed = await runOCR(uri);
+      const parsed = await runOCR(ocrUri);
       if (!parsed?.length) {
         setOcrError("Fant ingen varer i bildet. Prøv et tydeligere bilde eller et annet utsnitt.");
         return;
