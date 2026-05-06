@@ -113,7 +113,7 @@ export default function ScanScreen({ onGoBack, onScanComplete }) {
     setLoadingOCR(true);
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ImagePicker.MediaType?.Images ? [ImagePicker.MediaType.Images] : ImagePicker.MediaTypeOptions.Images,
         quality: 0.8,
       });
 

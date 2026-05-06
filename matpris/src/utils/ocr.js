@@ -58,6 +58,10 @@ function isProductName(name) {
 }
 
 export async function runOCR(imageUri) {
+  if (!VISION_API_KEY) {
+    throw new Error("Mangler Google Vision API-nøkkel.");
+  }
+
   const base64 = await FileSystem.readAsStringAsync(imageUri, {
     encoding: "base64",
   });
@@ -66,7 +70,7 @@ export async function runOCR(imageUri) {
     requests: [
       {
         image: { content: base64 },
-        features: [{ type: "TEXT_DETECTION", maxResults: 1 }],
+        features: [{ type: "DOCUMENT_TEXT_DETECTION", maxResults: 1 }],
       },
     ],
   };
@@ -82,7 +86,21 @@ export async function runOCR(imageUri) {
   }
 
   const json = await response.json();
-  const rawText = json.responses?.[0]?.textAnnotations?.[0]?.description ?? "";
+  const visionResponse = json.responses?.[0] ?? {};
+  const rawText =
+    visionResponse.fullTextAnnotation?.text ??
+    visionResponse.textAnnotations?.[0]?.description ??
+    "";
+
+  if (__DEV__ && !rawText.trim()) {
+    console.warn("[scan:ocr-empty]", {
+      imageUri,
+      responseKeys: Object.keys(visionResponse),
+      error: visionResponse.error,
+      textAnnotationCount: visionResponse.textAnnotations?.length ?? 0,
+    });
+  }
+
   console.log("=== OCR RAW TEXT ===\n" + rawText + "\n===================");
   return parseReceiptText(rawText);
 }
