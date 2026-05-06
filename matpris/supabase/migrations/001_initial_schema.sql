@@ -1,81 +1,92 @@
 -- supabase/migrations/001_initial_schema.sql
--- Initial schema for Matpris MVP
+-- Initial schema for Matpris MVP.
+--
+-- This schema matches the current JavaScript app contract:
+-- - receipts.chain
+-- - prices.store
+-- - prices.receipt_id -> receipts.id
+-- - product_aliases for OCR normalization
 
--- Products table: all available grocery items (pre-populated by team)
-create table public.products (
+begin;
+
+create extension if not exists pgcrypto;
+
+create table if not exists public.users (
+  id uuid default gen_random_uuid() primary key,
+  auth_id uuid not null unique references auth.users(id) on delete cascade,
+  display_name text,
+  last_scan_at timestamptz,
+  access_expires timestamptz,
+  total_scans integer not null default 0,
+  is_active boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.products (
   id uuid default gen_random_uuid() primary key,
   name text not null,
   brand text,
   category text,
   barcode text,
   weight_volume text,
-  created_at timestamp default now(),
+  verified boolean not null default false,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
   unique(name, brand, weight_volume)
 );
 
-create index idx_products_category on public.products(category);
-create index idx_products_name on public.products(name);
-
--- Prices table: price data contributed by users (one entry per item per receipt)
-create table public.prices (
+create table if not exists public.product_aliases (
   id uuid default gen_random_uuid() primary key,
-  product_id uuid references public.products(id) on delete cascade,
-  store_chain text not null,
-  price numeric not null,
-  quantity integer default 1,
-  receipt_date date not null,
-  user_id uuid references auth.users(id) on delete cascade,
-  scanned_at timestamp default now(),
-  created_at timestamp default now()
+  product_id uuid not null references public.products(id) on delete cascade,
+  alias text not null,
+  store text,
+  source text not null default 'ocr',
+  created_at timestamptz not null default now(),
+  unique(product_id, alias, store)
 );
 
-create index idx_prices_product_store_date on public.prices(product_id, store_chain, receipt_date);
-create index idx_prices_user_scanned on public.prices(user_id, scanned_at);
-
--- Receipts table: metadata about each scanned receipt
-create table public.receipts (
+create table if not exists public.receipts (
   id uuid default gen_random_uuid() primary key,
-  user_id uuid references auth.users(id) on delete cascade,
-  store_chain text not null,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  store_id uuid,
+  chain text not null,
+  receipt_date date,
+  scanned_at timestamptz not null default now(),
   image_url text,
   ocr_raw_text text,
-  item_count integer,
-  status text default 'pending' check(status in ('pending', 'processed')),
-  scanned_at timestamp default now(),
-  created_at timestamp default now()
+  status text not null default 'pending' check (status in ('pending', 'processed', 'failed')),
+  item_count integer not null default 0,
+  total_amount numeric,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
 );
 
-create index idx_receipts_user_scanned on public.receipts(user_id, scanned_at);
+create table if not exists public.prices (
+  id uuid default gen_random_uuid() primary key,
+  product_id uuid not null references public.products(id) on delete cascade,
+  receipt_id uuid not null references public.receipts(id) on delete cascade,
+  store text not null,
+  price numeric not null check (price > 0),
+  unit_price numeric,
+  quantity numeric not null default 1,
+  observed_date date not null default current_date,
+  created_at timestamptz not null default now()
+);
 
--- Enable RLS on all tables
+create index if not exists idx_products_category on public.products(category);
+create index if not exists idx_products_name on public.products(name);
+create index if not exists idx_product_aliases_alias on public.product_aliases(alias);
+create index if not exists idx_product_aliases_product on public.product_aliases(product_id);
+create index if not exists idx_receipts_user_scanned on public.receipts(user_id, scanned_at);
+create index if not exists idx_receipts_chain_scanned on public.receipts(chain, scanned_at);
+create index if not exists idx_prices_product_store_date on public.prices(product_id, store, observed_date);
+create index if not exists idx_prices_receipt on public.prices(receipt_id);
+
+alter table public.users enable row level security;
 alter table public.products enable row level security;
-alter table public.prices enable row level security;
+alter table public.product_aliases enable row level security;
 alter table public.receipts enable row level security;
+alter table public.prices enable row level security;
 
--- Products: public read, only backend (via service role) can insert
-create policy "products_read_public" on public.products
-  for select using (true);
-
--- Prices: public read, authenticated users can insert their own records
-create policy "prices_read_public" on public.prices
-  for select using (true);
-
-create policy "prices_insert_authenticated" on public.prices
-  for insert with check (auth.uid() = user_id);
-
--- Receipts: public read, authenticated users can insert their own records
-create policy "receipts_read_public" on public.receipts
-  for select using (true);
-
-create policy "receipts_insert_authenticated" on public.receipts
-  for insert with check (auth.uid() = user_id);
-
--- Storage RLS for receipts bucket
-create policy "receipts_upload" on storage.objects
-  for insert with check (
-    bucket_id = 'receipts'
-    and auth.uid()::text = (storage.foldername(name))[1]
-  );
-
-create policy "receipts_read" on storage.objects
-  for select using (bucket_id = 'receipts');
+commit;

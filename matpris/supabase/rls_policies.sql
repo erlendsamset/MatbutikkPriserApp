@@ -17,16 +17,21 @@ drop policy if exists "users_select_own" on public.users;
 drop policy if exists "users_update_own" on public.users;
 drop policy if exists "users_insert_own" on public.users;
 
+drop policy if exists "receipts_read_public" on public.receipts;
+drop policy if exists "receipts_insert_authenticated" on public.receipts;
 drop policy if exists "receipts_select_own" on public.receipts;
 drop policy if exists "receipts_insert_own" on public.receipts;
 drop policy if exists "receipts_update_own" on public.receipts;
 drop policy if exists "receipts_delete_own" on public.receipts;
 
+drop policy if exists "prices_read_public" on public.prices;
+drop policy if exists "prices_insert_authenticated" on public.prices;
 drop policy if exists "prices_select_all" on public.prices;
 drop policy if exists "prices_insert_owner_receipt" on public.prices;
 drop policy if exists "prices_update_owner_receipt" on public.prices;
 drop policy if exists "prices_delete_owner_receipt" on public.prices;
 
+drop policy if exists "products_read_public" on public.products;
 drop policy if exists "products_select_all" on public.products;
 drop policy if exists "products_insert_authenticated" on public.products;
 drop policy if exists "products_update_authenticated" on public.products;
@@ -85,7 +90,7 @@ using (auth.uid() = user_id);
 create policy "prices_select_all"
 on public.prices
 for select
-to authenticated
+to anon, authenticated
 using (true);
 
 create policy "prices_insert_owner_receipt"
@@ -139,7 +144,7 @@ using (
 create policy "products_select_all"
 on public.products
 for select
-to authenticated
+to anon, authenticated
 using (true);
 
 create policy "products_insert_authenticated"
@@ -159,7 +164,7 @@ with check (true);
 create policy "product_aliases_select_all"
 on public.product_aliases
 for select
-to authenticated
+to anon, authenticated
 using (true);
 
 create policy "product_aliases_insert_authenticated"

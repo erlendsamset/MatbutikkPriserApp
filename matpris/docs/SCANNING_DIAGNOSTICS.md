@@ -40,18 +40,18 @@ Ved Supabase-feil logger `src/screens/ScanScreen.js` nå:
 
 Dette er viktig fordi brukeren kan få "Klarte ikke å lagre priser", mens den tekniske årsaken kan være RLS, manglende kolonne eller feil tabellskjema.
 
-## Sannsynlig feil akkurat nå
+## Databasekontrakt
 
-Det er tegn til skjema-mismatch mellom kode, RLS-policy og migrasjon:
+Appkode, migrasjoner og RLS er standardisert på denne kontrakten:
 
-- `ScanScreen.js` oppretter receipt med `chain` og `total_amount`.
-- `supabase/migrations/001_initial_schema.sql` definerer receipt med `store_chain`, men ikke `chain` eller `total_amount`.
-- `rls_policies.sql` forventer at `prices.receipt_id` finnes og peker til `receipts.id`.
-- `ScanScreen.js` la tidligere inn prices uten `receipt_id`; dette er nå rettet i appkoden.
-- `001_initial_schema.sql` definerer `prices` med `store_chain`, `receipt_date` og `user_id`, mens appen/RLS bruker `store` og `receipt_id`.
-- `product_aliases` brukes av appen og RLS, men finnes ikke i `001_initial_schema.sql`.
+- `receipts.chain` er butikknøkkelen på kvitteringen.
+- `prices.store` er butikknøkkelen på prisraden.
+- `prices.receipt_id` peker til `receipts.id`.
+- `product_aliases` brukes til OCR-normalisering.
+- `products`, `prices` og `product_aliases` kan leses av både anonyme og innloggede brukere.
+- `receipts` kan bare leses og endres av eieren.
 
-Hvis databasen ble laget fra `001_initial_schema.sql`, vil innsending etter OCR sannsynligvis feile selv om OCR/parsing fungerer.
+Hvis en eksisterende Supabase-database ble laget fra en eldre migrasjon med `store_chain`, kjør `supabase/migrations/002_align_app_schema.sql` og deretter `supabase/rls_policies.sql` i Supabase SQL Editor.
 
 ## SQL for å sjekke faktisk Supabase-skjema
 

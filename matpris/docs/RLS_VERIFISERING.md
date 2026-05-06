@@ -5,7 +5,8 @@ Målet er å bekrefte at tilgang er trygg før launch.
 ## 1) Kjør policy-filen
 
 1. Åpne Supabase -> SQL Editor
-2. Kjør [supabase/rls_policies.sql](../supabase/rls_policies.sql)
+2. Hvis databasen er laget fra en eldre schema-fil, kjør [supabase/migrations/002_align_app_schema.sql](../supabase/migrations/002_align_app_schema.sql)
+3. Kjør [supabase/rls_policies.sql](../supabase/rls_policies.sql)
 
 ## 2) Lag to testbrukere
 
@@ -19,16 +20,22 @@ Logg inn med hver av dem i appen (eller via SQL + JWT klienttest).
 1. `products` og `prices`:
    - A kan lese
    - B kan lese
+   - Anonyme brukere kan lese
 
-2. `receipts`:
+2. `product_aliases`:
+   - A kan lese
+   - B kan lese
+   - Anonyme brukere kan lese
+
+3. `receipts`:
    - A kan kun lese/opprette/oppdatere/slette egne receipts
    - B kan ikke lese A sine receipts
 
-3. `prices` write:
+4. `prices` write:
    - A kan kun skrive prices koblet til receipt som eies av A
    - B kan ikke skrive mot A sin receipt
 
-4. `users`:
+5. `users`:
    - A ser kun egen profilrad
    - B ser kun egen profilrad
 
