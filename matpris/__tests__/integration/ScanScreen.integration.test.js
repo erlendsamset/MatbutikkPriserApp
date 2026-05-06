@@ -317,8 +317,8 @@ describe("ScanScreen (integration)", () => {
     );
     expect(mockProductsInsert).toHaveBeenCalledWith({ name: "Ny Vare" });
     expect(mockPricesInsert).toHaveBeenCalledWith([
-      { product_id: "p-existing", store: "rema", price: 20 },
-      { product_id: "p-new", store: "rema", price: 33 },
+      { product_id: "p-existing", receipt_id: "receipt-1", store: "rema", price: 20 },
+      { product_id: "p-new", receipt_id: "receipt-1", store: "rema", price: 33 },
     ]);
   });
 

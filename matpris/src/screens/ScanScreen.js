@@ -55,6 +55,18 @@ function fuzzyFind(key, aliasMap) {
   return bestId;
 }
 
+function throwSupabaseError(userMessage, supabaseError) {
+  if (__DEV__ && supabaseError) {
+    console.warn("[scan:supabase]", {
+      message: supabaseError.message,
+      code: supabaseError.code,
+      details: supabaseError.details,
+      hint: supabaseError.hint,
+    });
+  }
+  throw new Error(userMessage);
+}
+
 export default function ScanScreen({ onGoBack, onScanComplete }) {
   const [step, setStep] = useState(0);
   const [selectedStore, setSelectedStore] = useState(null);
@@ -137,7 +149,7 @@ export default function ScanScreen({ onGoBack, onScanComplete }) {
 
     try {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError) throw new Error("Klarte ikke å hente bruker.");
+      if (userError) throwSupabaseError("Klarte ikke å hente bruker.", userError);
       if (!user) {
         await fetchStoreTotals();
         return;
@@ -155,12 +167,13 @@ export default function ScanScreen({ onGoBack, onScanComplete }) {
         })
         .select()
         .single();
-      if (receiptError || !receipt) throw new Error("Klarte ikke å lagre kvittering.");
+      if (receiptError) throwSupabaseError("Klarte ikke å lagre kvittering.", receiptError);
+      if (!receipt) throw new Error("Klarte ikke å lagre kvittering.");
 
       const { data: aliases, error: aliasLoadError } = await supabase
         .from("product_aliases")
         .select("product_id, alias");
-      if (aliasLoadError) throw new Error("Klarte ikke å laste produktaliaser.");
+      if (aliasLoadError) throwSupabaseError("Klarte ikke å laste produktaliaser.", aliasLoadError);
 
       const aliasMap = {};
       for (const a of aliases ?? []) {
@@ -180,7 +193,7 @@ export default function ScanScreen({ onGoBack, onScanComplete }) {
               alias: item.name,
               store: selectedStore,
             });
-            if (aliasInsertError) throw new Error("Klarte ikke å lagre produktalias.");
+            if (aliasInsertError) throwSupabaseError("Klarte ikke å lagre produktalias.", aliasInsertError);
           }
         } else {
           const { data: newProduct, error: newProductError } = await supabase
@@ -188,7 +201,8 @@ export default function ScanScreen({ onGoBack, onScanComplete }) {
             .insert({ name: item.name })
             .select()
             .single();
-          if (newProductError || !newProduct) throw new Error("Klarte ikke å opprette produkt.");
+          if (newProductError) throwSupabaseError("Klarte ikke å opprette produkt.", newProductError);
+          if (!newProduct) throw new Error("Klarte ikke å opprette produkt.");
 
           productId = newProduct.id;
           aliasMap[key] = productId;
@@ -198,15 +212,20 @@ export default function ScanScreen({ onGoBack, onScanComplete }) {
             alias: item.name,
             store: selectedStore,
           });
-          if (aliasInsertError) throw new Error("Klarte ikke å lagre produktalias.");
+          if (aliasInsertError) throwSupabaseError("Klarte ikke å lagre produktalias.", aliasInsertError);
         }
 
-        priceRows.push({ product_id: productId, store: selectedStore, price: item.price });
+        priceRows.push({
+          product_id: productId,
+          receipt_id: receipt.id,
+          store: selectedStore,
+          price: item.price,
+        });
       }
 
       if (priceRows.length > 0) {
         const { error: pricesInsertError } = await supabase.from("prices").insert(priceRows);
-        if (pricesInsertError) throw new Error("Klarte ikke å lagre priser.");
+        if (pricesInsertError) throwSupabaseError("Klarte ikke å lagre priser.", pricesInsertError);
       }
 
       onScanComplete();
@@ -228,7 +247,7 @@ export default function ScanScreen({ onGoBack, onScanComplete }) {
         const { data: aliases, error: aliasesError } = await supabase
           .from("product_aliases")
           .select("product_id, alias");
-        if (aliasesError) throw new Error("Klarte ikke å hente aliaser for sammenligning.");
+        if (aliasesError) throwSupabaseError("Klarte ikke å hente aliaser for sammenligning.", aliasesError);
 
         const normalizedNames = items.map((i) => normalize(i.name));
         ids = [...new Set(
