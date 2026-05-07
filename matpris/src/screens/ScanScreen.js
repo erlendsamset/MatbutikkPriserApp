@@ -218,7 +218,7 @@ export default function ScanScreen({ onGoBack, onScanComplete }) {
         } else {
           const { data: newProduct, error: newProductError } = await supabase
             .from("products")
-            .insert({ name: item.name })
+            .insert({ name: item.name, weight_grams: item.weight_grams ?? null })
             .select()
             .single();
           if (newProductError) throwSupabaseError("Klarte ikke å opprette produkt.", newProductError);

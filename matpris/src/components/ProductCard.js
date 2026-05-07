@@ -46,6 +46,11 @@ export default function ProductCard({ product, selectedStore, onPress }) {
             <Text style={styles.price}>{formatPrice(displayPrice)}</Text>
             <Text style={styles.kr}> kr</Text>
           </View>
+          {product.weight_grams && displayPrice && (
+            <Text style={styles.kgPrice}>
+              {formatPrice((displayPrice / product.weight_grams) * 1000)} kr/kg
+            </Text>
+          )}
           {selectedStore === "all" && storeCount > 1 && (
             <Text style={styles.maxPrice}>
               Dyreste: {formatPrice(maxPrice)} kr
@@ -111,6 +116,11 @@ const styles = StyleSheet.create({
   kr: {
     fontSize: 13,
     color: "#7A8068",
+  },
+  kgPrice: {
+    fontSize: 12,
+    color: COLORS.textMuted,
+    marginTop: 2,
   },
   maxPrice: {
     fontSize: 11,

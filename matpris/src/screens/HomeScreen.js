@@ -37,7 +37,7 @@ export default function HomeScreen({ daysLeft, refreshKey }) {
     setLoading(true);
     const { data, error } = await supabase
       .from("prices")
-      .select("product_id, store, price, products(id, name)");
+      .select("product_id, store, price, products(id, name, weight_grams)");
 
     if (error) {
       console.error("Feil ved henting av produkter:", error.message);
@@ -50,7 +50,7 @@ export default function HomeScreen({ daysLeft, refreshKey }) {
       const p = row.products;
       if (!p) continue;
       if (!productMap[p.id]) {
-        productMap[p.id] = { id: p.id, name: p.name, prices: {} };
+        productMap[p.id] = { id: p.id, name: p.name, weight_grams: p.weight_grams, prices: {} };
       }
       productMap[p.id].prices[row.store] = parseFloat(row.price);
     }
@@ -69,6 +69,11 @@ export default function HomeScreen({ daysLeft, refreshKey }) {
     { key: "high",     label: "Dyrest" },
     { key: "coverage", label: "Flest butikker" },
   ];
+
+  const hasWeightedProducts = filtered.some((p) => p.weight_grams);
+  const displaySortOptions = hasWeightedProducts
+    ? [...SORT_OPTIONS, { key: "kg", label: "Kr/kg" }]
+    : SORT_OPTIONS;
 
   const badgeStyle = daysLeft > 7
     ? { bg: "#EFF5E5", border: "#C8DDB3", text: "#4A7A1A" }
@@ -103,7 +108,7 @@ export default function HomeScreen({ daysLeft, refreshKey }) {
         <StoreFilter selectedStore={selectedStore} onSelectStore={setSelectedStore} />
 
         <View style={styles.sortRow}>
-          {SORT_OPTIONS.map(({ key, label }) => (
+          {displaySortOptions.map(({ key, label }) => (
             <TouchableOpacity
               key={key}
               style={[styles.sortPill, sortOrder === key && styles.sortPillActive]}

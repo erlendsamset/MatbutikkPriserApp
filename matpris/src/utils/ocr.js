@@ -53,8 +53,27 @@ function isProductName(name) {
   if (name.length < 3) return false;
   if (NUMERIC_ONLY.test(name)) return false;
   if (!/[a-zæøå]/i.test(name)) return false;
-  if (SKIP_KEYWORDS.some((kw) => name.toLowerCase().includes(kw))) return false;
+  // Tillat navn som ender på " N%" (f.eks "SVINEKJØTTDEIG 9%") — produktnavn med inline VAT
+  const cleanName = name.replace(/\s+\d+%$/, "").trim();
+  if (cleanName.length < 3) return false;
+  if (SKIP_KEYWORDS.some((kw) => cleanName.toLowerCase().includes(kw))) return false;
   return true;
+}
+
+function extractWeight(rawName) {
+  if (!rawName) return null;
+  // Match: 250g, 1.5kg, 500 g, 1,2kg
+  const gMatch = rawName.match(/(\d+(?:[.,]\d+)?)\s*g\b/i);
+  if (gMatch) {
+    const grams = parseFloat(gMatch[1].replace(",", "."));
+    return Number.isFinite(grams) ? Math.round(grams) : null;
+  }
+  const kgMatch = rawName.match(/(\d+(?:[.,]\d+)?)\s*kg\b/i);
+  if (kgMatch) {
+    const kg = parseFloat(kgMatch[1].replace(",", "."));
+    if (Number.isFinite(kg)) return Math.round(kg * 1000);
+  }
+  return null;
 }
 
 export async function runOCR(imageUri) {
@@ -154,7 +173,58 @@ export function parseReceiptText(text) {
     const nextLine = lines[i + 1] ?? "";
     const unitMatch = nextLine.match(multiBuyLine);
     if (unitMatch) price = parsePriceToken(unitMatch[2]);
-    items.push({ name, price: withUnitPrice(name, price) });
+    items.push({ name, price: withUnitPrice(name, price), weight_grams: extractWeight(name) });
+  }
+
+  // Etterfyll manglende produkter via Sum-anker (Rema 1000)
+  // Håndterer format der produkter og priser kan være uregelrett spredt før Sum-linjen
+  const sumLineLower = lines.findIndex((l) => /^sum\s+\d+\s+varer/i.test(l));
+  if (sumLineLower !== -1 && items.length > 0) {
+    const sumLineMatch = lines[sumLineLower].match(/^sum\s+(\d+)/i);
+    if (sumLineMatch) {
+      const expectedCount = parseInt(sumLineMatch[1]);
+      const missing = expectedCount - items.length;
+
+      if (missing > 0) {
+        const itemNames = new Set(items.map((it) => it.name.toLowerCase()));
+        const usedPrices = new Set(); // Track which price-lines we've used
+        const orphanPairs = []; // { name, price }
+
+        // Gå gjennom linjer før Sum, match produktnavn med neste ubrukt pris
+        for (let i = Math.max(0, sumLineLower - 30); i < sumLineLower; i++) {
+          const line = lines[i];
+          if (!isProductName(line) || itemNames.has(line.toLowerCase())) continue;
+
+          // Finn neste ubrukt pris-linje (kan være flere linjer senere pga VAT/metadata)
+          let price = null;
+          let priceLineIdx = -1;
+          for (let j = i + 1; j < sumLineLower; j++) {
+            // Skip hvis vi allerede brukte denne prisen
+            if (usedPrices.has(j)) continue;
+            const p = extractTrailingPrice(lines[j]);
+            if (p && p > 0) {
+              // Filtrer bort hvis linjen er VAT-only eller metadata
+              if (!/^\d+%$/.test(lines[j]) && !lines[j].toLowerCase().includes("rabatt")) {
+                price = p;
+                priceLineIdx = j;
+                break;
+              }
+            }
+          }
+
+          if (price !== null) {
+            orphanPairs.push({ name: line, price, weight_grams: extractWeight(line) });
+            itemNames.add(line.toLowerCase());
+            usedPrices.add(priceLineIdx); // Mark this price as used
+          }
+        }
+
+        // Legg til de manglende parene (siste `missing` stykker)
+        orphanPairs.slice(-missing).forEach((pair) => {
+          items.push(pair);
+        });
+      }
+    }
   }
 
   if (items.length > 0) return items;
@@ -172,7 +242,7 @@ export function parseReceiptText(text) {
         const price = parsePriceToken(sameLineMatch[2]);
         const name = sameLineMatch[1].replace(/^#+/, "").trim();
         if (isProductName(name) && price > 0 && !seen.has(name.toLowerCase())) {
-          items.push({ name, price: withUnitPrice(name, price) });
+          items.push({ name, price: withUnitPrice(name, price), weight_grams: extractWeight(name) });
           seen.add(name.toLowerCase());
         }
         continue;
@@ -228,7 +298,7 @@ export function parseReceiptText(text) {
       if (price && price > 0) {
         const name = line.replace(/^#+/, "").trim();
         if (isProductName(name) && !seen.has(name.toLowerCase())) {
-          items.push({ name, price: withUnitPrice(name, price) });
+          items.push({ name, price: withUnitPrice(name, price), weight_grams: extractWeight(name) });
           seen.add(name.toLowerCase());
           if (skipToIdx !== -1) i = skipToIdx;
         }
@@ -281,7 +351,7 @@ export function parseReceiptText(text) {
       .replace(/\s+/g, " ")
       .trim();
     if (!isProductName(name)) continue;
-    items.push({ name, price: withUnitPrice(name, price) });
+    items.push({ name, price: withUnitPrice(name, price), weight_grams: extractWeight(name) });
   }
 
   if (items.length > 0) return items;
@@ -293,7 +363,7 @@ export function parseReceiptText(text) {
     if (!isProductName(name)) continue;
     const price = extractTrailingPrice(lines[i + 1]);
     if (price <= 0) continue;
-    items.push({ name, price: withUnitPrice(name, price) });
+    items.push({ name, price: withUnitPrice(name, price), weight_grams: extractWeight(name) });
     i++;
   }
 
@@ -301,7 +371,7 @@ export function parseReceiptText(text) {
 
   // Siste fallback: rene Antall-varer (engros-kvittering uten annet format)
   for (const [name, price] of Object.entries(unitPrices)) {
-    items.push({ name, price });
+    items.push({ name, price, weight_grams: extractWeight(name) });
   }
 
   return items;

@@ -36,6 +36,13 @@ export function getFilteredProducts({
     .filter((p) => selectedStore === "all" || p.prices[selectedStore] !== undefined)
     .sort((a, b) => {
       if (sortOrder === "coverage") return Object.keys(b.prices).length - Object.keys(a.prices).length;
+      if (sortOrder === "kg") {
+        const aPrice = getPrice(a);
+        const bPrice = getPrice(b);
+        const aKg = a.weight_grams ? (aPrice / a.weight_grams) * 1000 : Infinity;
+        const bKg = b.weight_grams ? (bPrice / b.weight_grams) * 1000 : Infinity;
+        return aKg - bKg;
+      }
       return sortOrder === "low" ? getPrice(a) - getPrice(b) : getPrice(b) - getPrice(a);
     });
 }

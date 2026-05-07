@@ -48,6 +48,11 @@ export default function ProductDetail({ product, visible, onClose }) {
               <Text style={[styles.cheapestStore, { color: cheapestInfo.color }]}>
                 {cheapestInfo.name}
               </Text>
+              {product.weight_grams && (
+                <Text style={styles.cheapestKgPrice}>
+                  {formatPrice((cheapest.price / product.weight_grams) * 1000)} kr/kg
+                </Text>
+              )}
             </View>
             <Text style={styles.cheapestPrice}>{formatPrice(cheapest.price)} kr</Text>
           </View>
@@ -83,9 +88,16 @@ export default function ProductDetail({ product, visible, onClose }) {
                   </View>
 
                   <View style={styles.priceRowRight}>
-                    <Text style={[styles.rowPrice, isCheapest && { fontWeight: "700" }]}>
-                      {formatPrice(price)} kr
-                    </Text>
+                    <View style={styles.priceCol}>
+                      <Text style={[styles.rowPrice, isCheapest && { fontWeight: "700" }]}>
+                        {formatPrice(price)} kr
+                      </Text>
+                      {product.weight_grams && (
+                        <Text style={styles.rowKgPrice}>
+                          {formatPrice((price / product.weight_grams) * 1000)}/kg
+                        </Text>
+                      )}
+                    </View>
                     {diff > 0 && <Text style={styles.priceDiff}>+{formatPrice(diff)}</Text>}
                   </View>
                 </View>
@@ -155,6 +167,7 @@ const styles = StyleSheet.create({
   },
   cheapestLabel: { fontSize: 11, color: "#7A8068" },
   cheapestStore: { fontSize: 15, fontWeight: "600", marginTop: 2 },
+  cheapestKgPrice: { fontSize: 12, color: "#7A8068", marginTop: 4 },
   cheapestPrice: { fontSize: 28, fontWeight: "700", color: COLORS.text },
   sectionTitle: {
     fontSize: 13,
@@ -185,7 +198,9 @@ const styles = StyleSheet.create({
   },
   badgeText: { fontSize: 10, fontWeight: "600", color: "#fff" },
   priceRowRight: { alignItems: "flex-end", flexDirection: "row", gap: 6 },
+  priceCol: { alignItems: "flex-end" },
   rowPrice: { fontSize: 16, fontWeight: "500", color: COLORS.text },
+  rowKgPrice: { fontSize: 11, color: "#7A8068", marginTop: 2 },
   priceDiff: { fontSize: 11, color: COLORS.danger },
 
 });
