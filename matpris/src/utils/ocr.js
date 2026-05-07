@@ -162,6 +162,7 @@ export function parseReceiptText(text) {
   // Format 2: Bunnpris — linjer med # prefix
   const hasBunnprisItems = lines.some((l) => l.startsWith("#"));
   if (hasBunnprisItems) {
+    const seen = new Set();
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       if (!line.startsWith("#")) continue;
@@ -170,17 +171,66 @@ export function parseReceiptText(text) {
       if (sameLineMatch) {
         const price = parsePriceToken(sameLineMatch[2]);
         const name = sameLineMatch[1].replace(/^#+/, "").trim();
-        if (isProductName(name) && price > 0)
+        if (isProductName(name) && price > 0 && !seen.has(name.toLowerCase())) {
           items.push({ name, price: withUnitPrice(name, price) });
+          seen.add(name.toLowerCase());
+        }
         continue;
       }
 
-      if (i + 1 < lines.length && priceOnly(lines[i + 1])) {
-        const price = extractTrailingPrice(lines[i + 1]);
+      // Håndter tolinjes format: #PRODUKTNAVN / PRIS
+      // Først: sjekk under produktet (vanligste)
+      const pricesBelow = [];
+      for (let j = i + 1; j < lines.length && j < i + 6; j++) {
+        const checkLine = lines[j];
+        if (
+          /^&\s*\+\s*pant|^pant\s*$/i.test(checkLine) ||
+          /normalpris|rabatt/i.test(checkLine) ||
+          /\d+%\s*$/.test(checkLine)
+        ) {
+          continue;
+        }
+        const p = extractTrailingPrice(checkLine);
+        // Filtrer bort små verdier (<10) som er sannsynligvis pant, ikke produktpris
+        if (p && p >= 10) {
+          pricesBelow.push({ price: p, idx: j });
+        }
+      }
+
+      let price = null;
+      let skipToIdx = -1;
+
+      if (pricesBelow.length > 0) {
+        // Hvis det finnes priser under, ta den største
+        price = Math.max(...pricesBelow.map((p) => p.price));
+        skipToIdx = Math.max(...pricesBelow.map((p) => p.idx));
+      } else {
+        // Hvis ingen pris under, se bakover etter en som ikke er tatt
+        // Søk lengre ned hvis nødvendig (opp til 5 linjer bakover)
+        for (let j = i - 1; j >= Math.max(0, i - 5); j--) {
+          const checkLine = lines[j];
+          if (
+            /^#+/.test(checkLine) ||
+            /^&\s*\+\s*pant|^pant\s*$/i.test(checkLine) ||
+            /normalpris|rabatt/i.test(checkLine)
+          ) {
+            continue;
+          }
+          const p = extractTrailingPrice(checkLine);
+          // Også filtrer små verdier når man søker bakover
+          if (p && p >= 10) {
+            price = p;
+            break;
+          }
+        }
+      }
+
+      if (price && price > 0) {
         const name = line.replace(/^#+/, "").trim();
-        if (isProductName(name) && price > 0) {
+        if (isProductName(name) && !seen.has(name.toLowerCase())) {
           items.push({ name, price: withUnitPrice(name, price) });
-          i++;
+          seen.add(name.toLowerCase());
+          if (skipToIdx !== -1) i = skipToIdx;
         }
       }
     }
