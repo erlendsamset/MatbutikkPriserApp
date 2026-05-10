@@ -17,6 +17,7 @@ const SKIP_KEYWORDS = [
   "terminal", "contactless", "åpent", "tlf", "org.nr",
   "aid:", "kjøp", "bankaxept", "netssdi", "approved", "arc:", "tvr:",
   "norsk butikk", "foretaks", "salgskvittering", "butikknr",
+  "trumf", "registrert", "medlem",
 ];
 
 function parsePriceToken(token) {
@@ -53,6 +54,20 @@ function isProductName(name) {
   if (name.length < 3) return false;
   if (NUMERIC_ONLY.test(name)) return false;
   if (!/[a-zæøå]/i.test(name)) return false;
+
+  // Reject quantity/price notations that look like receipt metadata
+  // Examples: "4 x 49,90", "2,260kg x kr 24,90", "Trumf registrert"
+
+  // Quantity × price patterns (e.g., "4 x 49,90", "4x49,90")
+  if (/^\d+\s*[xX]\s*[\d,.]+\s*(?:kr|nok)?$/.test(name)) return false;
+
+  // Weight × price patterns (e.g., "2,260kg x kr 24,90")
+  if (/\d+[,.]\d+\s*(?:kg|g|l|ml|stk)\s*[xX\-]\s*(?:kr|nok)?\s*[\d,.]+/i.test(name)) return false;
+
+  // Lines that are mostly numbers with minimal text (e.g., "2,260kg")
+  const nonNumeric = name.replace(/[\d\s.,xX\-krgnomløstk]/gi, "");
+  if (nonNumeric.length < 2) return false;
+
   // Tillat navn som ender på " N%" (f.eks "SVINEKJØTTDEIG 9%") — produktnavn med inline VAT
   const cleanName = name.replace(/\s+\d+%$/, "").trim();
   if (cleanName.length < 3) return false;
