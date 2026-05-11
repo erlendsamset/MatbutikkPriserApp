@@ -68,12 +68,9 @@ function isProductName(name) {
   const nonNumeric = name.replace(/[\d\s.,xX\-krgnomløstk]/gi, "");
   if (nonNumeric.length < 2) return false;
 
-  // Strip trailing VAT% (e.g., "... 15%" at end of line)
-  // Also strip embedded fat/alcohol content specs (e.g., "26%" in "NORVEGIA 26%")
-  const cleanName = name
-    .replace(/\s+\d+%$/, "") // Remove trailing VAT%
-    .replace(/\s+\d+%\s+/, " ") // Remove embedded % specs (e.g., "NORVEGIA 26% SK.FRI" → "NORVEGIA SK.FRI")
-    .trim();
+  // Strip trailing VAT% only (e.g., "NORVEGIA 26% SK.FRI 500 15%" → "NORVEGIA 26% SK.FRI 500")
+  // Keep embedded specs like "26%" (fat content) — they help identify the product
+  const cleanName = name.replace(/\s+\d+%$/, "").trim();
   if (cleanName.length < 3) return false;
 
   // Reject if result still looks like product spec with no real name
