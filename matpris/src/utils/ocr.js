@@ -209,17 +209,6 @@ export function parseReceiptText(text) {
     if (price <= 0) continue;
 
     const nextLine = lines[i + 1] ?? "";
-    // Check for weight + price-per-kg (e.g., "0,278kg x kr 54,90")
-    const weightPrice = extractWeightAndPricePerKg(nextLine);
-    if (weightPrice) {
-      // Use price-per-kg instead of total price for weighable products
-      price = weightPrice.pricePerKg;
-    } else {
-      // Check for multi-buy price (e.g., "4 x kr 49,90")
-      const unitMatch = nextLine.match(multiBuyLine);
-      if (unitMatch) price = parsePriceToken(unitMatch[2]);
-    }
-
     let isKgPrice = false;
     // Check for weight + price-per-kg (e.g., "0,278kg x kr 54,90")
     const weightPrice = extractWeightAndPricePerKg(nextLine);
