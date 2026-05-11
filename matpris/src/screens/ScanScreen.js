@@ -42,6 +42,24 @@ const normalize = (str) => {
   return stripped.toLowerCase().replace(/[^a-zæøå0-9]/g, "");
 };
 
+function deduplicateItems(items) {
+  // Group items by normalized name, keep first variant of each, count occurrences
+  const seen = new Map(); // Map: normalized key → { item, count }
+  for (const item of items) {
+    const key = normalize(item.name);
+    if (seen.has(key)) {
+      seen.get(key).count += 1;
+    } else {
+      seen.set(key, { item, count: 1 });
+    }
+  }
+  // Return deduplicated items with count
+  return Array.from(seen.values()).map(({ item, count }) => ({
+    ...item,
+    quantity: count,
+  }));
+}
+
 function levenshtein(a, b) {
   const m = a.length, n = b.length;
   const dp = Array.from({ length: m + 1 }, (_, i) => Array(n + 1).fill(0).map((_, j) => j === 0 ? i : 0));
@@ -120,7 +138,7 @@ export default function ScanScreen({ onGoBack, onScanComplete }) {
         setOcrError("Fant ingen varer i bildet. Prøv et tydeligere bilde eller et annet utsnitt.");
         return;
       }
-      setItems(parsed);
+      setItems(deduplicateItems(parsed));
       setStep(1);
     } catch (e) {
       setOcrError(`Feil: ${e.message}`);
@@ -153,7 +171,7 @@ export default function ScanScreen({ onGoBack, onScanComplete }) {
         setOcrError("Fant ingen varer i bildet. Prøv et tydeligere bilde eller et annet utsnitt.");
         return;
       }
-      setItems(parsed);
+      setItems(deduplicateItems(parsed));
       setStep(1);
     } catch (e) {
       setOcrError(`Feil: ${e.message}`);
@@ -241,12 +259,16 @@ export default function ScanScreen({ onGoBack, onScanComplete }) {
           if (aliasInsertError) throwSupabaseError("Klarte ikke å lagre produktalias.", aliasInsertError);
         }
 
-        priceRows.push({
-          product_id: productId,
-          receipt_id: receipt.id,
-          store: selectedStore,
-          price: item.price,
-        });
+        // Add this item once for each quantity
+        const quantity = item.quantity || 1;
+        for (let q = 0; q < quantity; q++) {
+          priceRows.push({
+            product_id: productId,
+            receipt_id: receipt.id,
+            store: selectedStore,
+            price: item.price,
+          });
+        }
       }
 
       if (priceRows.length > 0) {
@@ -329,7 +351,7 @@ export default function ScanScreen({ onGoBack, onScanComplete }) {
     onGoBack();
   };
 
-  const receiptTotal = items.reduce((sum, i) => sum + i.price, 0);
+  const receiptTotal = items.reduce((sum, i) => sum + i.price * (i.quantity || 1), 0);
 
   const generateEstimatedTotals = () => {
     if (!receiptTotal) return [];
@@ -476,9 +498,14 @@ export default function ScanScreen({ onGoBack, onScanComplete }) {
           <View key={i} style={styles.reviewItem}>
             <View style={styles.reviewItemLeft}>
               <Text style={styles.checkmark}>✅</Text>
-              <Text style={styles.itemName}>{item.name}</Text>
+              <View style={styles.itemNameContainer}>
+                <Text style={styles.itemName}>{item.name}</Text>
+                {item.quantity > 1 && (
+                  <Text style={styles.quantityBadge}>×{item.quantity}</Text>
+                )}
+              </View>
             </View>
-            <Text style={styles.itemPrice}>{item.price.toFixed(2)} kr</Text>
+            <Text style={styles.itemPrice}>{(item.price * (item.quantity || 1)).toFixed(2)} kr</Text>
           </View>
         ))}
 
@@ -623,7 +650,9 @@ const styles = StyleSheet.create({
   },
   reviewItemLeft: { flexDirection: "row", alignItems: "center", gap: 10 },
   checkmark: { fontSize: 16 },
+  itemNameContainer: { flexDirection: "row", alignItems: "center", gap: 8 },
   itemName: { fontSize: 14, color: COLORS.text },
+  quantityBadge: { fontSize: 12, fontWeight: "600", color: "#fff", backgroundColor: COLORS.accent, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10 },
   itemPrice: { fontSize: 15, fontWeight: "600", color: COLORS.text },
   totalRow: {
     flexDirection: "row",
