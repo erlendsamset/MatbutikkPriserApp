@@ -503,7 +503,7 @@ export default function ScanScreen({ onGoBack, onScanComplete }) {
               </View>
             </View>
             <View style={styles.priceContainer}>
-              <Text style={styles.itemPrice}>{item.price.toFixed(2)} kr</Text>
+              <Text style={styles.itemPrice}>{item.price.toFixed(2)} kr{item.isKgPrice ? '/kg' : ''}</Text>
               {item.quantity > 1 && (
                 <Text style={styles.itemPriceSmall}>{(item.price * item.quantity).toFixed(2)} kr</Text>
               )}
