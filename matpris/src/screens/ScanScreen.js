@@ -505,7 +505,12 @@ export default function ScanScreen({ onGoBack, onScanComplete }) {
                 )}
               </View>
             </View>
-            <Text style={styles.itemPrice}>{(item.price * (item.quantity || 1)).toFixed(2)} kr</Text>
+            <View style={styles.priceContainer}>
+              <Text style={styles.itemPrice}>{item.price.toFixed(2)} kr</Text>
+              {item.quantity > 1 && (
+                <Text style={styles.itemPriceSmall}>{(item.price * item.quantity).toFixed(2)} kr</Text>
+              )}
+            </View>
           </View>
         ))}
 
@@ -653,7 +658,9 @@ const styles = StyleSheet.create({
   itemNameContainer: { flexDirection: "row", alignItems: "center", gap: 8 },
   itemName: { fontSize: 14, color: COLORS.text },
   quantityBadge: { fontSize: 12, fontWeight: "600", color: "#fff", backgroundColor: COLORS.accent, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10 },
+  priceContainer: { alignItems: "flex-end" },
   itemPrice: { fontSize: 15, fontWeight: "600", color: COLORS.text },
+  itemPriceSmall: { fontSize: 12, color: COLORS.textMuted, marginTop: 2 },
   totalRow: {
     flexDirection: "row",
     justifyContent: "space-between",
