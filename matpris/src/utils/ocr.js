@@ -68,9 +68,18 @@ function isProductName(name) {
   const nonNumeric = name.replace(/[\d\s.,xX\-krgnomløstk]/gi, "");
   if (nonNumeric.length < 2) return false;
 
-  // Tillat navn som ender på " N%" (f.eks "SVINEKJØTTDEIG 9%") — produktnavn med inline VAT
-  const cleanName = name.replace(/\s+\d+%$/, "").trim();
+  // Strip trailing VAT% (e.g., "... 15%" at end of line)
+  // Also strip embedded fat/alcohol content specs (e.g., "26%" in "NORVEGIA 26%")
+  const cleanName = name
+    .replace(/\s+\d+%$/, "") // Remove trailing VAT%
+    .replace(/\s+\d+%\s+/, " ") // Remove embedded % specs (e.g., "NORVEGIA 26% SK.FRI" → "NORVEGIA SK.FRI")
+    .trim();
   if (cleanName.length < 3) return false;
+
+  // Reject if result still looks like product spec with no real name
+  // E.g., if it's just "15%" or ends with a percentage (means OCR failed to capture real name)
+  if (/^\d+%$/.test(cleanName) || /\s\d+%$/.test(cleanName)) return false;
+
   if (SKIP_KEYWORDS.some((kw) => cleanName.toLowerCase().includes(kw))) return false;
   return true;
 }
@@ -176,9 +185,14 @@ export function parseReceiptText(text) {
     if (i >= 2 && vatOnly.test(lines[i - 1])) {
       name = lines[i - 2].replace(/^#+/, "").trim();
     } else {
-      const inlineVatMatch = lines[i - 1].match(inlineVatLine);
-      if (inlineVatMatch) {
-        name = inlineVatMatch[1].replace(/^#+/, "").trim();
+      // Only extract inline VAT if there's exactly one % sign (avoid "NAME 26% SPEC 15%")
+      const prevLine = lines[i - 1];
+      const percentCount = (prevLine.match(/%/g) || []).length;
+      if (percentCount === 1) {
+        const inlineVatMatch = prevLine.match(inlineVatLine);
+        if (inlineVatMatch) {
+          name = inlineVatMatch[1].replace(/^#+/, "").trim();
+        }
       }
     }
 
@@ -389,5 +403,19 @@ export function parseReceiptText(text) {
     items.push({ name, price, weight_grams: extractWeight(name) });
   }
 
-  return items;
+  // Deduplicate: keep version with VAT%, remove version without
+  const normalizeKey = (str) => str.replace(/\s+\d+%$/, "").toLowerCase().replace(/[^a-zæøå0-9]/g, "");
+  const seen = new Map(); // Map from normalized key to item
+  for (const item of items) {
+    const key = normalizeKey(item.name);
+    const existing = seen.get(key);
+    // Keep item if: no existing, or existing has fewer % signs (incomplete), or both have same % count but new one has trailing %
+    const hasTrailingVat = /\s+\d+%$/.test(item.name);
+    const existingHasTrailingVat = existing && /\s+\d+%$/.test(existing.name);
+    if (!existing || (!existingHasTrailingVat && hasTrailingVat)) {
+      seen.set(key, item);
+    }
+  }
+
+  return Array.from(seen.values());
 }

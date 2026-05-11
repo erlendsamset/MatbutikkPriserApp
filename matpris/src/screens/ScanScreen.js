@@ -33,8 +33,14 @@ const FRAME_H = FRAME_W * (5 / 3);
 const FRAME_X = (SCREEN_W - FRAME_W) / 2;
 const FRAME_Y = Math.max(70, (SCREEN_H - FRAME_H) / 2 - 30);
 
-const normalize = (str) =>
-  str.toLowerCase().replace(/[^a-zæøå0-9]/g, "");
+const normalize = (str) => {
+  // Remove trailing VAT% and embedded specs (e.g., "PRODUCT 26% 15%" → "PRODUCT")
+  const stripped = str
+    .replace(/\s+\d+%$/, "") // Remove trailing VAT%
+    .replace(/\s+\d+%\s+/, " ") // Remove embedded specs like fat content
+    .trim();
+  return stripped.toLowerCase().replace(/[^a-zæøå0-9]/g, "");
+};
 
 function levenshtein(a, b) {
   const m = a.length, n = b.length;
