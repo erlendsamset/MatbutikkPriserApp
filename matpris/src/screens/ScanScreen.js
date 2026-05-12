@@ -227,7 +227,29 @@ export default function ScanScreen({ onGoBack, onScanComplete }) {
         let productId = aliasMap[key] ?? fuzzyFind(key, aliasMap);
 
         if (productId) {
-          if (!aliasMap[key]) {
+          // Found existing product — check if weight matches (first-gram-wins logic)
+          const { data: existingProduct, error: productFetchError } = await supabase
+            .from("products")
+            .select("weight_grams")
+            .eq("id", productId)
+            .single();
+          if (productFetchError) throwSupabaseError("Klarte ikke å hente produkt.", productFetchError);
+
+          const scannedGram = item.weight_grams;
+          if (scannedGram && !existingProduct?.weight_grams) {
+            // First time we see gram for this product — set it as standard
+            const { error: updateError } = await supabase
+              .from("products")
+              .update({ weight_grams: scannedGram })
+              .eq("id", productId);
+            if (updateError) throwSupabaseError("Klarte ikke å oppdatere produktvekt.", updateError);
+          } else if (scannedGram && existingProduct?.weight_grams && existingProduct.weight_grams !== scannedGram) {
+            // Different weight — create new product variant instead
+            productId = null;
+          }
+          // If no scanned gram, use existing product (treat as standard)
+
+          if (productId && !aliasMap[key]) {
             aliasMap[key] = productId;
             const { error: aliasInsertError } = await supabase.from("product_aliases").insert({
               product_id: productId,
@@ -236,7 +258,10 @@ export default function ScanScreen({ onGoBack, onScanComplete }) {
             });
             if (aliasInsertError) throwSupabaseError("Klarte ikke å lagre produktalias.", aliasInsertError);
           }
-        } else {
+        }
+
+        if (!productId) {
+          // Create new product (first time seeing this, or different weight variant)
           const { data: newProduct, error: newProductError } = await supabase
             .from("products")
             .insert({ name: item.name, weight_grams: item.weight_grams ?? null })
