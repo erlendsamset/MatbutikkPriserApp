@@ -53,13 +53,23 @@ function extractTrailingPrice(line) {
 function isDrink(productName) {
   if (!productName) return false;
   const lower = productName.toLowerCase();
-  const drinkKeywords = [
-    "liter", "litre", "l fl", "pet", "flaske", "boks", "dåse", "kan",
+  
+  // Check for explicit volume units (most reliable indicator of beverage)
+  if (/\b(liter|litre|l|ml|cl|dl)\b/i.test(productName)) return true;
+  
+  // Then check for bottle/can/package types that are liquid-specific
+  const liquidContainers = ["flaske", "boks", "dåse", "kan"];
+  if (liquidContainers.some((kw) => lower.includes(kw))) return true;
+  
+  // Check for specific drink brands/types (but be conservative)
+  const drinkBrands = [
     "coca", "fanta", "sprite", "pepsi", "urge", "solo", "crush",
-    "vann", "juice", "cider", "øl", "vin", "kaffe", "te", "energi",
-    "smoothie", "permille", "saft", "drikk",
+    "vann", "juice", "cider", "øl", "vin", "kaffe", "te",
+    "smoothie", "saft", "drikk"
   ];
-  return drinkKeywords.some((kw) => lower.includes(kw));
+  if (drinkBrands.some((kw) => lower.includes(kw))) return true;
+  
+  return false;
 }
 
 function isProductName(name) {
