@@ -298,20 +298,7 @@ export function parseReceiptText(text) {
         const price = parsePriceToken(sameLineMatch[2]);
         const name = sameLineMatch[1].replace(/^#+/, "").trim();
         if (isProductName(name) && price > 0 && !seen.has(name.toLowerCase())) {
-          let isKgPrice = false;
-    // Check for weight + price-per-kg (e.g., "0,278kg x kr 54,90")
-    const weightPrice = extractWeightAndPricePerKg(nextLine);
-    if (weightPrice) {
-      // Use price-per-kg instead of total price for weighable products
-      price = weightPrice.pricePerKg;
-      isKgPrice = true;
-    } else {
-      // Check for multi-buy price (e.g., "4 x kr 49,90")
-      const unitMatch = nextLine.match(multiBuyLine);
-      if (unitMatch) price = parsePriceToken(unitMatch[2]);
-    }
-
-    items.push({ name, price: withUnitPrice(name, price), weight_grams: extractWeight(name), isKgPrice });
+          items.push({ name, price: withUnitPrice(name, price), weight_grams: extractWeight(name), isKgPrice: false });
           seen.add(name.toLowerCase());
         }
         continue;
@@ -367,20 +354,7 @@ export function parseReceiptText(text) {
       if (price && price > 0) {
         const name = line.replace(/^#+/, "").trim();
         if (isProductName(name) && !seen.has(name.toLowerCase())) {
-          let isKgPrice = false;
-    // Check for weight + price-per-kg (e.g., "0,278kg x kr 54,90")
-    const weightPrice = extractWeightAndPricePerKg(nextLine);
-    if (weightPrice) {
-      // Use price-per-kg instead of total price for weighable products
-      price = weightPrice.pricePerKg;
-      isKgPrice = true;
-    } else {
-      // Check for multi-buy price (e.g., "4 x kr 49,90")
-      const unitMatch = nextLine.match(multiBuyLine);
-      if (unitMatch) price = parsePriceToken(unitMatch[2]);
-    }
-
-    items.push({ name, price: withUnitPrice(name, price), weight_grams: extractWeight(name), isKgPrice });
+          items.push({ name, price: withUnitPrice(name, price), weight_grams: extractWeight(name), isKgPrice: false });
           seen.add(name.toLowerCase());
           if (skipToIdx !== -1) i = skipToIdx;
         }
@@ -433,20 +407,7 @@ export function parseReceiptText(text) {
       .replace(/\s+/g, " ")
       .trim();
     if (!isProductName(name)) continue;
-    let isKgPrice = false;
-    // Check for weight + price-per-kg (e.g., "0,278kg x kr 54,90")
-    const weightPrice = extractWeightAndPricePerKg(nextLine);
-    if (weightPrice) {
-      // Use price-per-kg instead of total price for weighable products
-      price = weightPrice.pricePerKg;
-      isKgPrice = true;
-    } else {
-      // Check for multi-buy price (e.g., "4 x kr 49,90")
-      const unitMatch = nextLine.match(multiBuyLine);
-      if (unitMatch) price = parsePriceToken(unitMatch[2]);
-    }
-
-    items.push({ name, price: withUnitPrice(name, price), weight_grams: extractWeight(name), isKgPrice });
+    items.push({ name, price: withUnitPrice(name, price), weight_grams: extractWeight(name), isKgPrice: false });
   }
 
   if (items.length > 0) return items;
@@ -458,20 +419,7 @@ export function parseReceiptText(text) {
     if (!isProductName(name)) continue;
     const price = extractTrailingPrice(lines[i + 1]);
     if (price <= 0) continue;
-    let isKgPrice = false;
-    // Check for weight + price-per-kg (e.g., "0,278kg x kr 54,90")
-    const weightPrice = extractWeightAndPricePerKg(nextLine);
-    if (weightPrice) {
-      // Use price-per-kg instead of total price for weighable products
-      price = weightPrice.pricePerKg;
-      isKgPrice = true;
-    } else {
-      // Check for multi-buy price (e.g., "4 x kr 49,90")
-      const unitMatch = nextLine.match(multiBuyLine);
-      if (unitMatch) price = parsePriceToken(unitMatch[2]);
-    }
-
-    items.push({ name, price: withUnitPrice(name, price), weight_grams: extractWeight(name), isKgPrice });
+    items.push({ name, price: withUnitPrice(name, price), weight_grams: extractWeight(name), isKgPrice: false });
     i++;
   }
 
