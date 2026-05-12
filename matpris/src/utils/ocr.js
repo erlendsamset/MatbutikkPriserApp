@@ -50,6 +50,18 @@ function extractTrailingPrice(line) {
   return parsePriceToken(match[1]);
 }
 
+function isDrink(productName) {
+  if (!productName) return false;
+  const lower = productName.toLowerCase();
+  const drinkKeywords = [
+    "liter", "litre", "l fl", "pet", "flaske", "boks", "dåse", "kan",
+    "coca", "fanta", "sprite", "pepsi", "urge", "solo", "crush",
+    "vann", "juice", "cider", "øl", "vin", "kaffe", "te", "energi",
+    "smoothie", "permille", "saft", "drikk",
+  ];
+  return drinkKeywords.some((kw) => lower.includes(kw));
+}
+
 function isProductName(name) {
   if (name.length < 3) return false;
   if (NUMERIC_ONLY.test(name)) return false;
@@ -229,7 +241,7 @@ export function parseReceiptText(text) {
       if (unitMatch) price = parsePriceToken(unitMatch[2]);
     }
 
-    items.push({ name, price: withUnitPrice(name, price), weight_grams: extractWeight(name), isKgPrice });
+    items.push({ name, price: withUnitPrice(name, price), weight_grams: extractWeight(name), isKgPrice, hasPant: isDrink(name) });
   }
 
   // Etterfyll manglende produkter via Sum-anker (Rema 1000)
@@ -269,7 +281,7 @@ export function parseReceiptText(text) {
           }
 
           if (price !== null) {
-            orphanPairs.push({ name: line, price, weight_grams: extractWeight(line) });
+            orphanPairs.push({ name: line, price, weight_grams: extractWeight(line), hasPant: isDrink(line) });
             itemNames.add(line.toLowerCase());
             usedPrices.add(priceLineIdx); // Mark this price as used
           }
@@ -298,7 +310,7 @@ export function parseReceiptText(text) {
         const price = parsePriceToken(sameLineMatch[2]);
         const name = sameLineMatch[1].replace(/^#+/, "").trim();
         if (isProductName(name) && price > 0 && !seen.has(name.toLowerCase())) {
-          items.push({ name, price: withUnitPrice(name, price), weight_grams: extractWeight(name), isKgPrice: false });
+          items.push({ name, price: withUnitPrice(name, price), weight_grams: extractWeight(name), isKgPrice: false, hasPant: isDrink(name) });
           seen.add(name.toLowerCase());
         }
         continue;
@@ -354,7 +366,7 @@ export function parseReceiptText(text) {
       if (price && price > 0) {
         const name = line.replace(/^#+/, "").trim();
         if (isProductName(name) && !seen.has(name.toLowerCase())) {
-          items.push({ name, price: withUnitPrice(name, price), weight_grams: extractWeight(name), isKgPrice: false });
+          items.push({ name, price: withUnitPrice(name, price), weight_grams: extractWeight(name), isKgPrice: false, hasPant: isDrink(name) });
           seen.add(name.toLowerCase());
           if (skipToIdx !== -1) i = skipToIdx;
         }
@@ -427,7 +439,7 @@ export function parseReceiptText(text) {
 
   // Siste fallback: rene Antall-varer (engros-kvittering uten annet format)
   for (const [name, price] of Object.entries(unitPrices)) {
-    items.push({ name, price, weight_grams: extractWeight(name) });
+    items.push({ name, price, weight_grams: extractWeight(name), hasPant: isDrink(name) });
   }
 
   // Deduplicate: keep version with VAT%, remove version without
