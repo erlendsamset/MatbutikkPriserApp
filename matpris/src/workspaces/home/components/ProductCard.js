@@ -10,8 +10,8 @@
  */
 
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { COLORS } from "../utils/constants";
-import { getCheapestStore, formatPrice, getStoreInfo } from "../utils/helpers";
+import { COLORS } from "../../../_shared/constants";
+import { getCheapestStore, formatPrice, getStoreInfo } from "../../../_shared/helpers";
 
 export default function ProductCard({ product, selectedStore, onPress }) {
   const cheapest = getCheapestStore(product);

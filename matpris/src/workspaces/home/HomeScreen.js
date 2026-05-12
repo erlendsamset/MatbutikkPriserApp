@@ -16,12 +16,12 @@ import { useState, useMemo, useEffect } from "react";
 import {
   View, Text, TextInput, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity,
 } from "react-native";
-import { COLORS } from "../utils/constants";
-import { getFilteredProducts } from "../utils/helpers";
-import { supabase } from "../utils/supabase";
-import StoreFilter from "../components/StoreFilter";
-import ProductCard from "../components/ProductCard";
-import ProductDetail from "../components/ProductDetail";
+import { COLORS } from "../../_shared/constants";
+import { getFilteredProducts } from "../../_shared/helpers";
+import { supabase } from "../../_shared/supabase";
+import StoreFilter from "./components/StoreFilter";
+import ProductCard from "./components/ProductCard";
+import ProductDetail from "./components/ProductDetail";
 
 export default function HomeScreen({ daysLeft, refreshKey }) {
   const [searchQuery, setSearchQuery] = useState("");

@@ -12,8 +12,8 @@
 import {
   View, Text, TouchableOpacity, Modal, ScrollView, StyleSheet,
 } from "react-native";
-import { COLORS } from "../utils/constants";
-import { getCheapestStore, formatPrice, getStoreInfo } from "../utils/helpers";
+import { COLORS } from "../../../_shared/constants";
+import { getCheapestStore, formatPrice, getStoreInfo } from "../../../_shared/helpers";
 
 export default function ProductDetail({ product, visible, onClose }) {
   if (!product) return null;

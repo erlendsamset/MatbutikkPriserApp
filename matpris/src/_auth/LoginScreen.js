@@ -23,8 +23,8 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { COLORS } from "../utils/constants";
-import { supabase } from "../utils/supabase";
+import { COLORS } from "../_shared/constants";
+import { supabase } from "../_shared/supabase";
 
 export default function LoginScreen() {
   const [mode, setMode] = useState("login");

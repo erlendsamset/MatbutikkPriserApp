@@ -10,7 +10,7 @@
  */
 
 import { ScrollView, TouchableOpacity, Text, StyleSheet } from "react-native";
-import { STORES, COLORS } from "../utils/constants";
+import { STORES, COLORS } from "../../../_shared/constants";
 
 const CHIPS = [
   { key: "all", name: "Alle butikker", color: COLORS.accent, bg: COLORS.border },

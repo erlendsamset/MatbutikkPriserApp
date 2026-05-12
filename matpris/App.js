@@ -19,12 +19,12 @@ import { View, ScrollView, Dimensions, StyleSheet } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
-import HomeScreen from "./src/screens/HomeScreen";
-import LoginScreen from "./src/screens/LoginScreen";
-import ScanScreen from "./src/screens/ScanScreen";
-import ProfileScreen from "./src/screens/ProfileScreen";
-import BottomNav from "./src/components/BottomNav";
-import { supabase } from "./src/utils/supabase";
+import HomeScreen from "./src/workspaces/home/HomeScreen";
+import LoginScreen from "./src/_auth/LoginScreen";
+import ScanScreen from "./src/workspaces/scan/ScanScreen";
+import ProfileScreen from "./src/workspaces/profile/ProfileScreen";
+import BottomNav from "./src/_shared/BottomNav";
+import { supabase } from "./src/_shared/supabase";
 
 const SCREENS = ["home", "scan", "profile"];
 const { width } = Dimensions.get("window");

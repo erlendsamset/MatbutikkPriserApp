@@ -9,25 +9,50 @@ En crowdsourcet prissammenlignings-app for dagligvarer i Norge. Brukere skanner 
 - **OCR:** Planlagt: Google Cloud Vision API (ikke implementert ennå)
 - **Språk:** JavaScript (ikke TypeScript)
 
-## Mappestruktur
+## Mappestruktur: Three-Layer Routing System
+
 ```
 matpris/
-├── App.js                          ← Hovedinngang, håndterer navigasjon mellom skjermer
-├── CLAUDE.md                       ← Denne filen
+├── App.js                          ← App shell: auth check + workspace router
+├── CLAUDE.md                       ← Root: Three-layer pattern + global rules
 ├── src/
-│   ├── screens/
-│   │   ├── HomeScreen.js           ← Søk, filtrering, produktliste
-│   │   ├── ScanScreen.js           ← Kvitteringsskanning (4 steg: kamera→butikk→bekreft→ferdig)
-│   │   └── ProfileScreen.js        ← Brukerprofil, tilgangsstatus, skannehistorikk
-│   ├── components/
-│   │   ├── BottomNav.js            ← Bunnnavigasjon (Søk, Skann, Profil)
-│   │   ├── ProductCard.js          ← Produktkort i listen
-│   │   ├── ProductDetail.js        ← Modal med prissammenligning per butikk
-│   │   └── StoreFilter.js          ← Horisontal butikkfilter (scrollbar)
-│   └── utils/
-│       ├── constants.js            ← Butikker, farger, kategorier, eksempeldata
-│       └── helpers.js              ← getCheapestStore, getFilteredProducts, formatPrice
+│   ├── _shared/                    ← Layer 3: Truly global utilities
+│   │   ├── CLAUDE.md               ← Shared utility rules
+│   │   ├── constants.js            ← Butikker, farger, eksempeldata
+│   │   ├── helpers.js              ← formatPrice, getCheapestStore, getFilteredProducts
+│   │   ├── ocr.js                  ← OCR parsing logic
+│   │   ├── supabase.js             ← Supabase client + auth
+│   │   └── BottomNav.js            ← App-level navigation component
+│   │
+│   ├── _auth/                      ← Layer 2: Auth workflow (before workspaces)
+│   │   └── LoginScreen.js          ← Innlogging og registrering
+│   │
+│   └── workspaces/                 ← Layer 1: Feature-scoped workspaces
+│       ├── home/                   ← "Home" workspace: søk + produktliste
+│       │   ├── CLAUDE.md           ← Home-specific rules
+│       │   ├── HomeScreen.js       ← Screen
+│       │   └── components/
+│       │       ├── ProductCard.js
+│       │       ├── ProductDetail.js
+│       │       └── StoreFilter.js
+│       │
+│       ├── scan/                   ← "Scan" workspace: kvitteringsskanning
+│       │   ├── CLAUDE.md           ← Scan-specific rules
+│       │   ├── ScanScreen.js       ← Screen
+│       │   └── components/         ← (Future: receipt UI components)
+│       │
+│       └── profile/                ← "Profile" workspace: brukerprofil
+│           ├── CLAUDE.md           ← Profile-specific rules
+│           ├── ProfileScreen.js    ← Screen
+│           └── components/         ← (Future: profile detail components)
 ```
+
+### Mønster: "Folder as Workspace"
+- **App.js** = Router + auth check (thin shell)
+- **_shared/** = Code reused across workspaces (constants, helpers, clients)
+- **_auth/** = Auth happens before workspace routing
+- **workspaces/{feature}/** = Each workspace owns its screens + components + utils
+- **Each workspace has CLAUDE.md** = Workspace-specific rules and conventions
 
 ## Designsystem
 
@@ -106,13 +131,33 @@ Ikke koblet til ennå — appen bruker SAMPLE_DATA i constants.js.
 - Handleliste-funksjon
 - App Store-klargjøring
 
-## Viktige regler
+## Global Regler (alle lag)
 1. Alt UI-tekst skal være på norsk
 2. Ikke bruk TypeScript — prosjektet er rent JavaScript
 3. Behold det eksisterende designsystemet (farger, borderRadius, spacing)
 4. Bruk StyleSheet.create() for styling, ikke inline styles
 5. Eksempeldata ligger i constants.js — når Supabase kobles til, erstattes disse med ekte API-kall
 6. Appen skal fungere offline med cached data (implementeres senere)
+
+## Three-Layer Architecture Rules
+
+### Layer 1: Workspaces (src/workspaces/{feature}/)
+- **Eierskap:** Hver workspace eier sin skjerm, komponenter og workspace-spesifikk logikk
+- **Importer:** Kan importere fra `../_shared/` og fra sin eget workspace
+- **Ingen direktekall:** Workspaces skal IKKE importere fra andre workspaces
+- **Props fra App.js:** App.js sender state/callbacks ned som props
+- **Hver workspace har CLAUDE.md:** Dokumenterer hva som skjer i den workspacen
+
+### Layer 2: Auth (_auth/)
+- **Ansvar:** LoginScreen vises før noen workspace rendres
+- **Ingen imports fra workspaces:** _auth/ er isolert fra workspace-logikk
+- **Kan importere fra _shared/:** Auth bruker supabase client fra _shared
+
+### Layer 3: Shared (_shared/)
+- **Ren kode:** Ingen React-komponenter som avhenger av workspace-kontekst
+- **Reusable:** Logikk som brukes av flere workspaces (OCR, formatPrice, etc.)
+- **Singletons:** constants, supabase client
+- **Ingen workspace-imports:** _shared/ importerer ALDRI fra workspaces
 
 ## 95% Confidence Requirement (Before Code Changes)
 Before making **any code changes** (.js file edits), I must reach 95% confidence. This means:

@@ -23,9 +23,9 @@ import {
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from "expo-image-manipulator";
-import { STORES, COLORS } from "../utils/constants";
-import { supabase } from "../utils/supabase";
-import { runOCR } from "../utils/ocr";
+import { STORES, COLORS } from "../../_shared/constants";
+import { supabase } from "../../_shared/supabase";
+import { runOCR } from "../../_shared/ocr";
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
 const FRAME_W = SCREEN_W * 0.82;
