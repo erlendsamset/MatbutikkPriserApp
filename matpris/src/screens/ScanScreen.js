@@ -39,6 +39,11 @@ const normalize = (str) => {
   return stripped.toLowerCase().replace(/[^a-zæøå0-9]/g, "");
 };
 
+function cleanProductName(name) {
+  // Remove trailing VAT% (e.g., "NORVEGIA 26% SK.FRI 500 15%" → "NORVEGIA 26% SK.FRI 500")
+  return name.replace(/\s+\d+%$/, "").trim();
+}
+
 function deduplicateItems(items) {
   // Group items by normalized name, keep first variant of each, count occurrences
   const seen = new Map(); // Map: normalized key → { item, count }
@@ -521,7 +526,7 @@ export default function ScanScreen({ onGoBack, onScanComplete }) {
             <View style={styles.reviewItemLeft}>
               <Text style={styles.checkmark}>✅</Text>
               <View style={styles.itemNameContainer}>
-                <Text style={styles.itemName}>{item.name}</Text>
+                <Text style={styles.itemName}>{cleanProductName(item.name)}</Text>
                 {item.quantity > 1 && (
                   <Text style={styles.quantityBadge}>×{item.quantity}</Text>
                 )}
