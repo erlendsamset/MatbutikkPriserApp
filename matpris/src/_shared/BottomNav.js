@@ -10,7 +10,7 @@
  */
 
 import { View, TouchableOpacity, Text, StyleSheet } from "react-native";
-import { COLORS } from "../utils/constants";
+import { COLORS } from "./constants";
 
 const tabs = [
   { key: "home", label: "Søk", icon: "🔍" },
