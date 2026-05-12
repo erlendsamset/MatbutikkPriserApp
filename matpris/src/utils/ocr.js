@@ -94,6 +94,13 @@ function extractWeight(rawName) {
     const kg = parseFloat(kgMatch[1].replace(",", "."));
     if (Number.isFinite(kg)) return Math.round(kg * 1000);
   }
+  // Assume 3+ digit numbers without unit are grams (e.g., "LETTRØMME 300 TINE")
+  // Don't assume for 1-2 digit numbers (e.g., "5" could be anything)
+  const implicitGramMatch = rawName.match(/\b(\d{3,})\b/);
+  if (implicitGramMatch) {
+    const grams = parseInt(implicitGramMatch[1]);
+    if (Number.isFinite(grams) && grams > 0) return grams;
+  }
   return null;
 }
 
